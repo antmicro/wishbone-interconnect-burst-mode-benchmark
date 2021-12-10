@@ -9,6 +9,7 @@ from liteeth.phy.mii import LiteEthPHYMII
 
 class ArtySoC(TestSoC):
     toolchain = "vivado"
+
     def __init__(self, eth_ip, **kwargs):
         platform = platform_arty.Platform(variant="a7-35", toolchain=self.toolchain)
         sys_clk_freq = int(100e6)

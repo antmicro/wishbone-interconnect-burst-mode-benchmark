@@ -36,7 +36,7 @@ kB = 1024
 
 
 def main():
-    targets = dict(filter(lambda item: "SoC" in item[0], globals().items()))
+    targets = dict(filter(lambda item: item[0].endswith("SoC"), globals().items()))
     ## Read and parse arguments
     parser = argparse.ArgumentParser(
         description="Interconnect Benchmark - gateware/BIOS/firmware builder"
@@ -57,12 +57,12 @@ def main():
         target = targets[args.target]
 
     ## Create SoC
-    soc = target(cpu_type="vexriscv", cpu_variant="full+debug", eth_ip="169.254.13.37")
+    soc = target(eth_ip="192.168.2.50")
 
     # BIOS/software constants
     #soc.add_constant("FLASH_BOOT_ADDRESS", 0x0)
 
-    sim_config = target.sim_config()
+    sim_config = soc.sim_config()
 
     # Build final SoC
     builder = Builder(soc, **builder_argdict(args))

@@ -18,6 +18,8 @@ class TestSoC(SoCCore):
 
         # SoCCore
         SoCCore.__init__(self, platform, sys_clk_freq,
+            cpu_type                 = "vexriscv",
+            cpu_variant              = "full+debug", 
             ident                    = "Interconnect Benchmark SoC",
             ident_version            = True,
             integrated_main_ram_size = 0x10000,
@@ -39,5 +41,5 @@ class TestSoC(SoCCore):
             csr_csv      = "analyzer.csv")
         self.add_csr("analyzer")
     
-    def sim_config():
+    def sim_config(self):
         return None

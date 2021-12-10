@@ -14,3 +14,4 @@ builds/
 firmware.bin
 firmware.elf
 firmware.fbi
+analyzer.csv
