@@ -12,3 +12,14 @@ and if you have Vivado installed:
 ```
 $ ./bitstream.py --target=ArtySoC --build
 ```
+
+## Usage
+
+Connect Arty with flashed bitstream to your host's Ethernet interface or start simulation (which will make tap0 interface) and set it's IP address to 169.254.10.1/24.
+Then connect with lxserver, use lxterm to load software and litescope_cli to trigger the scope and download results.
+
+```
+$ lxserver --udp --udp-ip 169.254.10.10
+$ lxterm [...] #TODO
+$ litescope_cli
+```

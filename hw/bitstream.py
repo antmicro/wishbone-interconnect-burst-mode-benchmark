@@ -48,6 +48,7 @@ def main():
     )
     builder_args(parser)
     vivado_build_args(parser)
+    parser.set_defaults(csr_csv="csr.csv")
     args = parser.parse_args()
 
     if (args.target) not in targets.keys():
@@ -57,7 +58,7 @@ def main():
         target = targets[args.target]
 
     ## Create SoC
-    soc = target(eth_ip="192.168.2.50")
+    soc = target(eth_ip="169.254.10.10")
 
     # BIOS/software constants
     #soc.add_constant("FLASH_BOOT_ADDRESS", 0x0)

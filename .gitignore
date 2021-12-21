@@ -15,3 +15,5 @@ firmware.bin
 firmware.elf
 firmware.fbi
 analyzer.csv
+csr.csv
+dump.vcd
