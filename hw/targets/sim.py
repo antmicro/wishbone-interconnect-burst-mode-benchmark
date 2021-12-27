@@ -11,20 +11,22 @@ from liteeth.phy.model import LiteEthPHYModel
 
 class SimSoC(TestSoC):
     toolchain = "verilator"
-    eth_ip = ""
+    local_ip = ""
+    remote_ip = ""
     
-    def __init__(self, eth_ip, **kwargs):
+    def __init__(self, local_ip, remote_ip, **kwargs):
         platform = litex_sim.Platform()
         sys_clk_freq = int(1e6)
         crg = CRG(platform.request("sys_clk"))
-        self.eth_ip = eth_ip
+        self.local_ip = local_ip
+        self.remote_ip = remote_ip
 
-        TestSoC.__init__(self, platform, sys_clk_freq, crg, uart_name="sim")
+        TestSoC.__init__(self, platform, sys_clk_freq, crg, uart_name="sim", **kwargs)
 
         # Ethernet / Etherbone
-        self.submodules.ethphy = LiteEthPHYModel(self.platform.request("eth", 0))
-        self.add_ethernet(phy=self.ethphy, dynamic_ip=True)
-        self.add_etherbone(phy=self.ethphy, ip_address=self.eth_ip)
+        # self.submodules.ethphy = LiteEthPHYModel(self.platform.request("eth", 0))
+        # self.add_ethernet(phy=self.ethphy, dynamic_ip=True)
+        # self.add_etherbone(phy=self.ethphy, ip_address=self.local_ip)
     
     def sim_config(self):
         sim_cfg = SimConfig()
@@ -33,6 +35,8 @@ class SimSoC(TestSoC):
 
         # UART.
         sim_cfg.add_module("serial2console", "serial")
-        sim_cfg.add_module("ethernet", "eth", args={"interface": "tap0", "ip": self.eth_ip})
+
+        # Ethernet
+        sim_cfg.add_module("ethernet", "eth", args={"interface": "tap0", "ip": self.remote_ip})
 
         return sim_cfg

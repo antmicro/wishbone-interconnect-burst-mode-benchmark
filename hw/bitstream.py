@@ -46,6 +46,10 @@ def main():
         "--target", default="SimSoC",
         help="Target platform: {} (default=\"SimSoC\")".format(", ".join(targets.keys()))
     )
+    parser.add_argument("--threads",              default=1,               help="Set number of threads (default=1)")
+    parser.add_argument("--opt-level",            default="O3",            help="Compilation optimization level")
+    parser.add_argument("--sim-debug",            action="store_true",     help="Add simulation debugging modules")
+
     builder_args(parser)
     vivado_build_args(parser)
     parser.set_defaults(csr_csv="csr.csv")
@@ -58,7 +62,13 @@ def main():
         target = targets[args.target]
 
     ## Create SoC
-    soc = target(eth_ip="169.254.10.10")
+    local_ip="169.254.10.10"
+    remote_ip="169.254.10.1"
+    soc = target(sim_debug=args.sim_debug, local_ip=local_ip, remote_ip=local_ip)
+    for i in range(4):
+        soc.add_constant("LOCALIP{}".format(i+1), int(local_ip.split(".")[i]))
+    for i in range(4):
+        soc.add_constant("REMOTEIP{}".format(i+1), int(remote_ip.split(".")[i]))
 
     # BIOS/software constants
     #soc.add_constant("FLASH_BOOT_ADDRESS", 0x0)
@@ -74,7 +84,11 @@ def main():
     #if not args.no_compile_software:
     #    builder.add_software_package("firmware", os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "sw")))
 
-    builder.build(**builder_kwargs, run=args.build, sim_config=sim_config)
+    builder.build(**builder_kwargs,
+                  run        = args.build,
+                  sim_config = sim_config,
+                  threads    = args.threads,
+                  opt_level  = args.opt_level)
 
 if __name__ == "__main__":
     main()
