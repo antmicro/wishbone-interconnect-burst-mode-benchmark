@@ -37,6 +37,7 @@ kB = 1024
 
 def main():
     targets = dict(filter(lambda item: item[0].endswith("SoC"), globals().items()))
+
     ## Read and parse arguments
     parser = argparse.ArgumentParser(
         description="Interconnect Benchmark - gateware/BIOS/firmware builder"
@@ -46,29 +47,35 @@ def main():
         "--target", default="SimSoC",
         help="Target platform: {} (default=\"SimSoC\")".format(", ".join(targets.keys()))
     )
+
+    # Simulation parameters
     parser.add_argument("--threads",              default=1,               help="Set number of threads (default=1)")
     parser.add_argument("--opt-level",            default="O3",            help="Compilation optimization level")
     parser.add_argument("--sim-debug",            action="store_true",     help="Add simulation debugging modules")
+    # IP
+    parser.add_argument("--local-ip",             default="169.254.10.10",  help="Local IP address of SoC (default=169.254.10.10)")
+    parser.add_argument("--remote-ip",            default="169.254.10.1", help="Remote IP address of TFTP server (default=169.254.10.1)")
 
     builder_args(parser)
     vivado_build_args(parser)
+
     parser.set_defaults(csr_csv="csr.csv")
     args = parser.parse_args()
 
     if (args.target) not in targets.keys():
-        print("[interconn_bench] Unknown target {}".format(args.target))
+        print("Unknown target {}".format(args.target))
         exit(1)
     else:
         target = targets[args.target]
 
     ## Create SoC
-    local_ip="169.254.10.10"
-    remote_ip="169.254.10.1"
-    soc = target(sim_debug=args.sim_debug, local_ip=local_ip, remote_ip=local_ip)
+
+    soc = target(local_ip=args.local_ip, remote_ip=args.remote_ip, **soc_kwargs)
+
     for i in range(4):
-        soc.add_constant("LOCALIP{}".format(i+1), int(local_ip.split(".")[i]))
+        soc.add_constant("LOCALIP{}".format(i+1), int(args.local_ip.split(".")[i]))
     for i in range(4):
-        soc.add_constant("REMOTEIP{}".format(i+1), int(remote_ip.split(".")[i]))
+        soc.add_constant("REMOTEIP{}".format(i+1), int(args.remote_ip.split(".")[i]))
 
     # BIOS/software constants
     #soc.add_constant("FLASH_BOOT_ADDRESS", 0x0)
@@ -88,7 +95,8 @@ def main():
                   run        = args.build,
                   sim_config = sim_config,
                   threads    = args.threads,
-                  opt_level  = args.opt_level)
+                  opt_level  = args.opt_level,
+                  interactive = True)
 
 if __name__ == "__main__":
     main()

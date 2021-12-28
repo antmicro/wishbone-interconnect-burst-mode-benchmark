@@ -24,9 +24,9 @@ class SimSoC(TestSoC):
         TestSoC.__init__(self, platform, sys_clk_freq, crg, uart_name="sim", **kwargs)
 
         # Ethernet / Etherbone
-        # self.submodules.ethphy = LiteEthPHYModel(self.platform.request("eth", 0))
-        # self.add_ethernet(phy=self.ethphy, dynamic_ip=True)
-        # self.add_etherbone(phy=self.ethphy, ip_address=self.local_ip)
+        self.submodules.ethphy = LiteEthPHYModel(self.platform.request("eth", 0))
+        self.add_ethernet(phy=self.ethphy, dynamic_ip=True)
+        self.add_etherbone(phy=self.ethphy, ip_address=self.local_ip)
     
     def sim_config(self):
         sim_cfg = SimConfig()
