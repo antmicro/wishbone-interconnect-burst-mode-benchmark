@@ -27,7 +27,9 @@ from migen.genlib.resetsync import AsyncResetSynchronizer
 from litex.build import *
 from litex.build.xilinx.vivado import vivado_build_args, vivado_build_argdict
 from litex.soc.integration.builder import *
-from litex.soc.integration.soc import SoCRegion
+from litex.soc.integration.soc_core import soc_core_argdict
+from litex.soc.integration.soc import SoCBusHandler, auto_int
+from litex.soc.integration.common import *
 
 from targets.sim import SimSoC
 from targets.arty import ArtySoC
@@ -42,25 +44,35 @@ def main():
     parser = argparse.ArgumentParser(
         description="Interconnect Benchmark - gateware/BIOS/firmware builder"
     )
+    # Basic parameters
     parser.add_argument("--build", action="store_true", help="Build bitstream")
     parser.add_argument(
         "--target", default="SimSoC",
         help="Target platform: {} (default=\"SimSoC\")".format(", ".join(targets.keys()))
     )
-
+    # Interconnect parameters
+    parser.add_argument("--bus-standard",      default="wishbone",                help="Select bus standard: {}, (default=wishbone).".format(", ".join(SoCBusHandler.supported_standard)))
+    parser.add_argument("--bus-data-width",    default=32,         type=auto_int, help="Bus data-width (default=32).")
+    parser.add_argument("--bus-address-width", default=32,         type=auto_int, help="Bus address-width (default=32).")
+    parser.add_argument("--bus-timeout",       default=1e6,        type=float,    help="Bus timeout in cycles (default=1e6).")
     # Simulation parameters
-    parser.add_argument("--threads",              default=1,               help="Set number of threads (default=1)")
-    parser.add_argument("--opt-level",            default="O3",            help="Compilation optimization level")
-    parser.add_argument("--sim-debug",            action="store_true",     help="Add simulation debugging modules")
+    parser.add_argument("--threads",           default=1,               help="Set number of threads (default=1)")
+    parser.add_argument("--opt-level",         default="O3",            help="Compilation optimization level")
+    parser.add_argument("--sim-debug",         action="store_true",     help="Add simulation debugging modules")
     # IP
-    parser.add_argument("--local-ip",             default="169.254.10.10",  help="Local IP address of SoC (default=169.254.10.10)")
-    parser.add_argument("--remote-ip",            default="169.254.10.1", help="Remote IP address of TFTP server (default=169.254.10.1)")
+    parser.add_argument("--local-ip",          default="169.254.10.10", help="Local IP address of SoC (default=169.254.10.10)")
+    parser.add_argument("--remote-ip",         default="169.254.10.1",  help="Remote IP address of TFTP server (default=169.254.10.1)")
 
     builder_args(parser)
     vivado_build_args(parser)
 
     parser.set_defaults(csr_csv="csr.csv")
     args = parser.parse_args()
+
+    soc_kwargs = soc_core_argdict(args)
+    soc_kwargs["with_uart"] = True
+    soc_kwargs["with_timer"] = True
+    soc_kwargs["with_ctrl"] = True
 
     if (args.target) not in targets.keys():
         print("Unknown target {}".format(args.target))
