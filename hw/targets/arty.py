@@ -21,5 +21,4 @@ class ArtySoC(TestSoC):
         self.submodules.ethphy = LiteEthPHYMII(
                 clock_pads = self.platform.request("eth_clocks"),
                 pads       = self.platform.request("eth"))
-        self.add_ethernet(phy=self.ethphy, dynamic_ip=True)
         self.add_etherbone(phy=self.ethphy, ip_address=local_ip)

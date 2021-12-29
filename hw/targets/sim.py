@@ -25,7 +25,6 @@ class SimSoC(TestSoC):
 
         # Ethernet / Etherbone
         self.submodules.ethphy = LiteEthPHYModel(self.platform.request("eth", 0))
-        self.add_ethernet(phy=self.ethphy, dynamic_ip=True)
         self.add_etherbone(phy=self.ethphy, ip_address=self.local_ip)
     
     def get_sim_config(self):
