@@ -28,15 +28,15 @@ class SimSoC(TestSoC):
         self.add_ethernet(phy=self.ethphy, dynamic_ip=True)
         self.add_etherbone(phy=self.ethphy, ip_address=self.local_ip)
     
-    def sim_config(self):
-        sim_cfg = SimConfig()
-        sim_cfg.add_clocker("sys_clk", freq_hz=self.sys_clk_freq)
+    def get_sim_config(self):
+        sim_config = SimConfig()
+        sim_config.add_clocker("sys_clk", freq_hz=self.sys_clk_freq)
         cpu = CPUS.get(self.cpu_type)
 
-        # UART.
-        sim_cfg.add_module("serial2console", "serial")
+        # UART
+        sim_config.add_module("serial2tcp", "serial", args={"port" : 1111})
 
         # Ethernet
-        sim_cfg.add_module("ethernet", "eth", args={"interface": "tap0", "ip": self.remote_ip})
+        sim_config.add_module("ethernet", "eth", args={"interface": "tap0", "ip": self.remote_ip})
 
-        return sim_cfg
+        return sim_config

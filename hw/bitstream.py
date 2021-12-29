@@ -81,27 +81,25 @@ def main():
         target = targets[args.target]
 
     ## Create SoC
-
     soc = target(local_ip=args.local_ip, remote_ip=args.remote_ip, **soc_kwargs)
 
+    # Add software constants
     for i in range(4):
         soc.add_constant("LOCALIP{}".format(i+1), int(args.local_ip.split(".")[i]))
     for i in range(4):
         soc.add_constant("REMOTEIP{}".format(i+1), int(args.remote_ip.split(".")[i]))
 
-    # BIOS/software constants
-    #soc.add_constant("FLASH_BOOT_ADDRESS", 0x0)
+    # Get simulation configuration
+    sim_config = soc.get_sim_config()
 
-    sim_config = soc.sim_config()
-
-    # Build final SoC
+    ## Build final SoC
     builder = Builder(soc, **builder_argdict(args))
     builder_kwargs = {}
     if soc.toolchain == "vivado":
         builder_kwargs = vivado_build_argdict(args)
 
-    #if not args.no_compile_software:
-    #    builder.add_software_package("firmware", os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "sw")))
+    if not args.no_compile_software:
+        builder.add_software_package("application", os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "sw")))
 
     builder.build(**builder_kwargs,
                   run        = args.build,

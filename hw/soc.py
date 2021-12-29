@@ -30,7 +30,7 @@ class TestSoC(SoCCore):
         self.submodules.crg = crg
 
         # LiteScope
-        # TODO: replace analyzed signals with AXI when used
+        # TODO: What signals could be also monitored?
         analyzer_signals = [
             self.cpu.ibus,
             self.cpu.dbus,
@@ -41,5 +41,5 @@ class TestSoC(SoCCore):
             csr_csv      = "analyzer.csv")
         self.add_csr("analyzer")
     
-    def sim_config(self):
+    def get_sim_config(self):
         return None
