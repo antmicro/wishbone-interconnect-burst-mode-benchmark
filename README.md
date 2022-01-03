@@ -21,5 +21,5 @@ Then connect with lxserver, boot the benchmark application with lxterm and use l
 ```
 $ lxserver --udp --udp-ip 169.254.10.10
 $ lxterm --serial-boot --kernel build/sim/software/application/application.bin socket://localhost:1111
-$ litescope_cli
+$ litescope_cli -v simsoc_dbus_dbus_adr 0x10001ef0
 ```
