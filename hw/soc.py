@@ -22,12 +22,15 @@ class TestSoC(SoCCore):
             cpu_variant              = "full+debug", 
             ident                    = "Interconnect Benchmark SoC",
             ident_version            = True,
-            integrated_main_ram_size = 0x10000,
+            integrated_main_ram_size = 0x1000000,
             integrated_rom_size      = 0x8000,
             **kwargs)
         
         # CRG
         self.submodules.crg = crg
+
+        # Additional RAM
+        self.add_ram("test_ram", 0x20000000, 0x100000)
 
         # LiteScope
         # TODO: What signals could be also monitored?

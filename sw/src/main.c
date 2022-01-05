@@ -3,11 +3,13 @@
 #include <string.h>
 
 #include <irq.h>
-#include <libbase/uart.h>
-#include <libbase/console.h>
 #include <generated/csr.h>
+#include <generated/mem.h>
+#include <libbase/uart.h>
+#include <libbase/memtest.h>
 
-#define ARR_SIZE 64
+#define TEST_ADDR TEST_RAM_BASE
+#define TEST_SIZE TEST_RAM_SIZE
 
 uint64_t system_ticks = 0;
 
@@ -29,33 +31,22 @@ void isr(void)
 
 int main(void)
 {
-    uint32_t i = 0;
-    uint32_t test_arr[ARR_SIZE];
-    uint32_t temp = 0xaa;
 #ifdef CONFIG_CPU_HAS_INTERRUPT
     irq_setmask(0);
     irq_setie(1);
 #endif
     uart_init();
 
-    printf("test_arr: 0x%p\n", test_arr);
+    printf("%s\n\n", MEM_REGIONS);
+    printf(":%x@%p\n", TEST_SIZE, (void *)TEST_ADDR);
 
-    for (i=0;i<UINT32_MAX;i++) {}
-
-    printf("uint32_t write\n");
-    for (i = 0; i < ARR_SIZE; i++) {
-        test_arr[i] = temp;
-    }
-
-    printf("uint32_t read\n");
-    for (i = 0; i < ARR_SIZE; i++) {
-        temp = test_arr[i];
-    }
-
-    puts("done");
-
-    while (1) {
-    }
+    puts(":A");
+    memtest((unsigned int *)TEST_ADDR, TEST_SIZE);
+    puts(":B");
+    memspeed((unsigned int *)TEST_ADDR, TEST_SIZE, 0, 0);
+    puts(":C");
+    memspeed((unsigned int *)TEST_ADDR, TEST_SIZE, 0, 1);
+    puts(":D");
 
     return 0;
 }
