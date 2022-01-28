@@ -1,8 +1,8 @@
 # Burst Mode Interconnect Benchmark
 
-## Building
+## Building test SoC
 
-Assuming you already have installed Yosys, LiteX and RISC-V GCC toolchain:
+Assuming you already have installed YosysHQ OSS CAD Suite, LiteX and RISC-V GCC toolchain:
 ```
 # apt install verilator gtkwave libevent-dev libjson-c-dev
 $ cd hw

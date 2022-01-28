@@ -1,0 +1,2 @@
+cocotb
+git+https://github.com/wallento/cocotbext-wishbone.git
