@@ -25,4 +25,6 @@ $(PWD)/dut.v: $(WRAPPER_SCRIPT) $(PWD)/tb.v $(TARGET_DEPS)
 	python3 $(WRAPPER_SCRIPT) $(TARGET_OPTIONS)
 	mv build/gateware/dut.v .
 
-
+clean-all:
+	make clean
+	rm -r build dut.v tb.v results.xml dump.vcd csr.csv
