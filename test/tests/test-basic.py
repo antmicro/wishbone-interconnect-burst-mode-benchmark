@@ -4,6 +4,7 @@ import os
 import sys
 import cocotb
 import logging
+import inspect
 from itertools import repeat
 from cocotb.triggers import Timer
 from cocotb.result import raise_error
@@ -19,9 +20,6 @@ from cocotbext.wishbone.driver import WishboneMaster
 from cocotbext.wishbone.driver import WBOp
 
 
-async def tmr(ns: float) -> None:
-    await Timer(ns, units='ns')
-
 def make_clock(dut, clock_mhz):
     clk_period_ns = round(1 / clock_mhz * 1000, 2)
     dut._log.info("input clock = %d MHz, period = %.2f ns" % (clock_mhz, clk_period_ns))
@@ -31,24 +29,25 @@ def make_clock(dut, clock_mhz):
 
 
 class WbSRAM(object):
-    """
-    """
-    LOGLEVEL = logging.DEBUG
-
-    def __init__(self, dut):
-        self._dut = dut
-        self.wbs = WishboneMaster(self._dut, "io_wbs", self._dut.clk,
+    def __init__(self, dut, **kwargs):
+        self.dut = dut
+        self.wbs = WishboneMaster(self.dut, "io_wbs", self.dut.clk,
                               width=32,   # size of data bus
                               timeout=10) # in clock cycle number
 
+        # Set the signal "test_name" to match this test
+        test_name = kwargs.get('test_name', inspect.stack()[1][3])
+        tn = cocotb.binary.BinaryValue(value=test_name.encode(), n_bits=4096)
+        self.dut.test_name.value = tn
+
     @cocotb.coroutine
     async def reset(self):
-        self._dut.reset.value = 0
-        await ClockCycles(self._dut.clk, 5)
-        self._dut.reset.value = 1
-        await ClockCycles(self._dut.clk, 5)
-        self._dut.reset.value = 0
-        await ClockCycles(self._dut.clk, 5)
+        self.dut.reset.value = 0
+        await ClockCycles(self.dut.clk, 5)
+        self.dut.reset.value = 1
+        await ClockCycles(self.dut.clk, 5)
+        self.dut.reset.value = 0
+        await ClockCycles(self.dut.clk, 5)
 
     @cocotb.coroutine
     async def wb_read(self, adr):
@@ -69,7 +68,7 @@ class WbSRAM(object):
 async def test_read(dut):
     address = 0x10000000
     harness = WbSRAM(dut)
-    clk_gen = make_clock(harness._dut, 100)
+    clk_gen = make_clock(harness.dut, 100)
 
     await harness.reset()
     value = await harness.wb_read(address)
@@ -82,11 +81,10 @@ async def test_write(dut):
     address = 0x10000000
     value = 4
     harness = WbSRAM(dut)
-    clk_gen = make_clock(harness._dut, 100)
+    clk_gen = make_clock(harness.dut, 100)
 
     await harness.reset()
-    harness.wb_write(address, value)
-    await ClockCycles(harness._dut.clk, 5)
+    await harness.wb_write(address, value)
     assert await harness.wb_read(address) == value
 
     clk_gen.kill()
