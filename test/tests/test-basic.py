@@ -42,26 +42,26 @@ class WbSRAM(object):
 
     @cocotb.coroutine
     async def reset(self):
-        self.dut.reset.value = 0
-        await ClockCycles(self.dut.clk, 5)
         self.dut.reset.value = 1
-        await ClockCycles(self.dut.clk, 5)
+        await ClockCycles(self.dut.clk, 3)
         self.dut.reset.value = 0
-        await ClockCycles(self.dut.clk, 5)
+        await ClockCycles(self.dut.clk, 3)
+        self.dut.reset.value = 1
+        await ClockCycles(self.dut.clk, 3)
 
     @cocotb.coroutine
     async def wb_read(self, adr):
         result = await self.wbs.send_cycle([WBOp(adr >> 2, acktimeout=3)])
         for rec in result:
-            self.log.debug("wb read: {}".format(rec))
-        raise ReturnValue(result[-1].datrd)
+            self.dut._log.debug("Wishbone read: {}: {}".format(rec.adr, rec.datrd))
+        return result[-1].datrd
 
     @cocotb.coroutine
     async def wb_write(self, adr, data):
         result = await self.wbs.send_cycle([WBOp(adr >> 2, data, acktimeout=3)])
         for rec in result:
-            self.log.debug("wb write: {}".format(rec))
-        raise ReturnValue(0)
+            self.dut._log.debug("Wishbone write: {}: {}".format(rec.adr, rec.datwr))
+        return 0
 
 
 @cocotb.test()
