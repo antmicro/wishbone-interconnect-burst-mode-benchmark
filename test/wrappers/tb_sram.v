@@ -22,7 +22,7 @@ assign io_wbs_cti = 3'b000;
 assign io_wbs_bte = 2'b00;
 
 dut dut(
-        .clk_clksys(clk),
+        .clk(clk),
         .reset(reset),
         .wishbone_adr(io_wbs_adr),
         .wishbone_dat_r(io_wbs_datrd),

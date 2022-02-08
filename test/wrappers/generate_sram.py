@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from migen import Module, Signal, ClockDomain
-from migen.fhdl.structure import ResetSignal
+from migen.fhdl.structure import ClockSignal, ResetSignal
 
 from litex.build.sim.platform import SimPlatform
 from litex.build.generic_platform import Pins, Subsignal
@@ -24,8 +24,7 @@ _io = [
         Subsignal("cti",   Pins(3)),
         Subsignal("bte",   Pins(2)),
         Subsignal("err",   Pins(1))),
-    ("clk", 0,
-        Subsignal("clksys", Pins(1))),
+    ("clk", 0, Pins(1)),
     ("reset", 0, Pins(1)),
 ]
 
@@ -35,11 +34,12 @@ _connectors = []
 class _CRG(Module):
     def __init__(self, platform):
         clk = platform.request("clk")
-        rst = platform.request("reset")
+        rst = ~platform.request("reset")
 
         self.clock_domains.cd_sys = ClockDomain()
 
         self.comb += [
+            ClockSignal("sys").eq(clk),
             ResetSignal("sys").eq(rst),
         ]
 
