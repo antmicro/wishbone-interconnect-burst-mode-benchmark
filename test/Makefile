@@ -5,7 +5,7 @@ PWD=$(shell pwd)
 
 PYTHONPATH := $(PWD)/..:$(PYTHONPATH)
 
-TEST_SCRIPT = test-basic
+TEST_SCRIPT ?= test-classic
 TARGET = sram
 
 VERILOG_SOURCES = $(PWD)/dut.v $(PWD)/tb.v

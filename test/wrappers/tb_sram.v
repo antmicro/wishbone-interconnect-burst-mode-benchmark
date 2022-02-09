@@ -12,13 +12,12 @@ module tb(
         input io_wbs_we,
         input io_wbs_sel,
         input io_wbs_err,
+        input [2:0] io_wbs_cti,
 	input [4095:0] test_name
 );
 
-inout wire [2:0] io_wbs_cti;
 inout wire [1:0] io_wbs_bte;
 
-assign io_wbs_cti = 3'b000;
 assign io_wbs_bte = 2'b00;
 
 dut dut(
