@@ -129,3 +129,27 @@ class WbMaster(object):
             await ClockCycles(self.dut.clk, 1)
 
         return words
+
+    @cocotb.coroutine
+    async def wb_inc_adr_burst_cycle(self, adr, data, idle=0, acktimeout=1, bte=0b00, end=None):
+        ops = []
+        result = []
+        adr_shift = self.wbs._width//8
+        adr_cnt = 0
+
+        if not isinstance(data, list):
+            raise TestError("burst cycle: data is not a list")
+        if len(data) < 2:
+            raise TestError("burst cycle: data list has less than 2 elements")
+
+        for word in data:
+            ops.append(WBOp((adr // adr_shift) + adr_cnt, word, idle=idle, acktimeout=acktimeout, cti=0b010, bte=bte))
+        ops[-1].cti = 0b111 # last request ends with End-of-Burst to inform slave that it can terminate current data phase
+        if isinstance(end, tuple):
+            ops.append(WBOp(end[0] // adr_shift, end[1], idle=idle, acktimeout=acktimeout, cti=0b111, bte=bte))
+
+        responses = await self.wbs.send_cycle(ops)
+
+        for res in responses:
+            result.append((res.adr * adr_shift, res.datrd))
+        return result
