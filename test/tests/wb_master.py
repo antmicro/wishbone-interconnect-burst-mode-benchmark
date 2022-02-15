@@ -142,8 +142,17 @@ class WbMaster(object):
         if len(data) < 2:
             raise TestError("burst cycle: data list has less than 2 elements")
 
+        if bte != 0:
+            raise TestError("burst wrap size: only ilnear increments are supported")
+
+        wrap_modulo = (2 << bte) if (bte > 0) else 1
+
         for word in data:
             ops.append(WBOp((adr // adr_shift) + adr_cnt, word, idle=idle, acktimeout=acktimeout, cti=0b010, bte=bte))
+            adr_cnt = adr_cnt + 1
+
+        # TODO: reorder ops if wrap is not linear
+
         ops[-1].cti = 0b111 # last request ends with End-of-Burst to inform slave that it can terminate current data phase
         if isinstance(end, tuple):
             ops.append(WBOp(end[0] // adr_shift, end[1], idle=idle, acktimeout=acktimeout, cti=0b111, bte=bte))
