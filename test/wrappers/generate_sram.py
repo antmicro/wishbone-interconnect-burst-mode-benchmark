@@ -32,6 +32,11 @@ _io = [
         Subsignal("stb_tx", Pins(1)),
         Subsignal("wait_rx", Pins(1)),
         Subsignal("wait_tx", Pins(1))),
+    ("sram", 0,
+        Subsignal("adr",   Pins(6)),
+        Subsignal("dat_r", Pins(32)),
+        Subsignal("dat_w", Pins(32)),
+        Subsignal("we",    Pins(1))),
     ("clk", 0, Pins(1)),
     ("reset", 0, Pins(1)),
 ]
@@ -117,6 +122,17 @@ class BaseSoC(SoCCore):
         copy_layout_directions(source=sim_wishbone, target=wb)
         self.comb += wb.connect(sim_wishbone)
         self.add_wb_master(sim_wishbone)
+
+        # SRAM port
+        sram_pins = self.platform.request('sram')
+        sram_port = self.sram.mem.get_port(write_capable=True)
+        self.specials += sram_port
+        self.comb += [
+            sram_port.adr.eq(sram_pins.adr),
+            sram_port.dat_w.eq(sram_pins.dat_w),
+            sram_pins.dat_r.eq(sram_port.dat_r),
+            sram_port.we.eq(sram_pins.we),
+        ]
 
         # FIFO
         fifo_pins = self.platform.request('fifo')

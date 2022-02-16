@@ -104,3 +104,28 @@ class WbMaster(object):
             await ClockCycles(self.dut.clk, 1)
         
         return stream
+
+    @cocotb.coroutine
+    async def sram_read(self, addr, length):
+        words = []
+        for i in range(length):
+            self.dut.io_sram_we.value = 0
+            self.dut.io_sram_adr.value = addr + i
+            await ClockCycles(self.dut.clk, 1)
+            words.append(self.dut.io_sram_datrd.value)
+            await ClockCycles(self.dut.clk, 1)
+
+        return words
+
+    @cocotb.coroutine
+    async def sram_write(self, addr, data):
+        words = []
+        for i in range(len(data)):
+            self.dut.io_sram_adr.value = addr + i
+            self.dut.io_sram_datwr.value = data[i]
+            self.dut.io_sram_we.value = 1
+            await ClockCycles(self.dut.clk, 1)
+            self.dut.io_sram_we.value = 0
+            await ClockCycles(self.dut.clk, 1)
+
+        return words
