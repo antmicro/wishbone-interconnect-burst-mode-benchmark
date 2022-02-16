@@ -19,6 +19,16 @@ from cocotbext.wishbone.driver import WishboneMaster
 from cocotbext.wishbone.driver import WBOp
 
 
+def dump(obj):
+    for attr in dir(obj):
+        if not attr.startswith("__"):
+            if attr in ("adr, datrd, datwr"):
+                print("%s = 0x%08x, " % (attr, getattr(obj, attr)), end='')
+            else:
+                print("%s = %r, " % (attr, getattr(obj, attr)), end='')
+    print("")
+
+
 class WbMaster(object):
     def __init__(self, dut, **kwargs):
         self.dut = dut
@@ -133,16 +143,12 @@ class WbMaster(object):
     @cocotb.coroutine
     async def wb_inc_adr_burst_cycle(self, adr, data, idle=0, acktimeout=1, bte=0b00, end=None):
         ops = []
-        result = []
         adr_shift = self.wbs._width//8
 
         if not isinstance(data, list):
             raise TestError("burst cycle: data is not a list")
         if len(data) < 2:
             raise TestError("burst cycle: data list has less than 2 elements")
-
-        if bte != 0:
-            raise TestError("burst wrap size: only ilnear increments are supported")
 
         wrap_modulo = (2 << bte) if (bte > 0) else 1
         wrap_mask = wrap_modulo-1
@@ -155,8 +161,8 @@ class WbMaster(object):
             offset_lsb = (i+cnt_offset) & wrap_mask
             # msb = counter value without wrapped bytes
             offset_msb = i & (~wrap_mask)
-            next_adr = adr_base + offset_msb + offset_lsb
-            ops.append(WBOp(next_adr, data[i], idle=idle, acktimeout=acktimeout, cti=0b010, bte=bte))
+            offset = offset_msb + offset_lsb
+            ops.append(WBOp(adr_base + offset, data[offset], idle=idle, acktimeout=acktimeout, cti=0b010, bte=bte))
 
         ops[-1].cti = 0b111 # last request ends with End-of-Burst to inform slave that it can terminate current data phase
         if isinstance(end, tuple):
@@ -165,5 +171,6 @@ class WbMaster(object):
         responses = await self.wbs.send_cycle(ops)
 
         for res in responses:
-            result.append((res.adr * adr_shift, res.datrd))
-        return result
+            dump(res)
+
+        return responses
