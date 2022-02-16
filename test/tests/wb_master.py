@@ -135,7 +135,6 @@ class WbMaster(object):
         ops = []
         result = []
         adr_shift = self.wbs._width//8
-        adr_cnt = 0
 
         if not isinstance(data, list):
             raise TestError("burst cycle: data is not a list")
@@ -146,12 +145,18 @@ class WbMaster(object):
             raise TestError("burst wrap size: only ilnear increments are supported")
 
         wrap_modulo = (2 << bte) if (bte > 0) else 1
+        wrap_mask = wrap_modulo-1
 
-        for word in data:
-            ops.append(WBOp((adr // adr_shift) + adr_cnt, word, idle=idle, acktimeout=acktimeout, cti=0b010, bte=bte))
-            adr_cnt = adr_cnt + 1
+        adr_base = (adr//adr_shift) & (~wrap_mask)
+        cnt_offset = (adr//adr_shift) & wrap_mask
 
-        # TODO: reorder ops if wrap is not linear
+        for i in range(len(data)):
+            # lsb = counter + offset, overflow ignored
+            offset_lsb = (i+cnt_offset) & wrap_mask
+            # msb = counter value without wrapped bytes
+            offset_msb = i & (~wrap_mask)
+            next_adr = adr_base + offset_msb + offset_lsb
+            ops.append(WBOp(next_adr, data[i], idle=idle, acktimeout=acktimeout, cti=0b010, bte=bte))
 
         ops[-1].cti = 0b111 # last request ends with End-of-Burst to inform slave that it can terminate current data phase
         if isinstance(end, tuple):

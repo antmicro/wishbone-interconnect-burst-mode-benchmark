@@ -23,13 +23,14 @@ from .wb_master import WbMaster
 @cocotb.test()
 async def test_read(dut):
     adr = 0x10000000
-    bus_read = [None, None, None, None]
+    bus_read = [None, None, None, None, None, None, None, None]
+    bte = 0b00
 
     harness = WbMaster(dut)
     clk_gen = make_clock(harness.dut, 100)
 
     await harness.reset()
-    responses = await harness.wb_inc_adr_burst_cycle(adr, bus_read, acktimeout=3)
+    responses = await harness.wb_inc_adr_burst_cycle(adr, bus_read, acktimeout=3, bte=bte)
 
     clk_gen.kill()
 
@@ -37,13 +38,14 @@ async def test_read(dut):
 @cocotb.test()
 async def test_write(dut):
     adr = 0x10000000
-    bus_write = [10, 20, 30, 40]
+    bus_write = [10, 20, 30, 40, 50, 60, 70, 80]
+    bte = 0b00
 
     harness = WbMaster(dut)
     clk_gen = make_clock(harness.dut, 100)
 
     await harness.reset()
-    responses = await harness.wb_inc_adr_burst_cycle(adr, bus_write, acktimeout=3)
+    responses = await harness.wb_inc_adr_burst_cycle(adr, bus_write, acktimeout=3, bte=bte)
 
     clk_gen.kill()
 
@@ -51,14 +53,15 @@ async def test_write(dut):
 @cocotb.test()
 async def test_read_with_write_tail(dut):
     adr = 0x10000000
-    bus_read = [None, None, None, None]
+    bus_read = [None, None, None, None, None, None, None, None]
+    bte = 0b00
     tail = (adr, 1)
 
     harness = WbMaster(dut)
     clk_gen = make_clock(harness.dut, 100)
 
     await harness.reset()
-    responses = await harness.wb_inc_adr_burst_cycle(adr, bus_read, acktimeout=3, end=tail)
+    responses = await harness.wb_inc_adr_burst_cycle(adr, bus_read, acktimeout=3, bte=bte, end=tail)
 
     clk_gen.kill()
 
@@ -66,13 +69,14 @@ async def test_read_with_write_tail(dut):
 @cocotb.test()
 async def test_write_with_read_tail(dut):
     adr = 0x10000000
-    bus_write = [1, 2, 3, 4]
+    bus_write = [10, 20, 30, 40, 50, 60, 70, 80]
+    bte = 0b00
     tail = (adr, None)
 
     harness = WbMaster(dut)
     clk_gen = make_clock(harness.dut, 100)
 
     await harness.reset()
-    responses = await harness.wb_inc_adr_burst_cycle(adr, bus_write, acktimeout=3, end=tail)
+    responses = await harness.wb_inc_adr_burst_cycle(adr, bus_write, acktimeout=3, bte=bte, end=tail)
 
     clk_gen.kill()
