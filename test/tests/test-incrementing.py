@@ -22,97 +22,129 @@ from .wb_master import WbMaster
 
 @cocotb.test()
 async def test_read(dut):
-    adr = 0x10000004
-    bus_read = [None, None, None, None, None, None, None, None]
-    adr_verify = []
+    adr_base = 0x10000000
+    adr_offset = 0x4
     bte = 0b01
-    sram = [] # replace with second port access to the prefilled SRAM
+    sram_prefill = [10, 20, 30, 40, 50, 60, 70, 80]
+
+    adr = adr_base + adr_offset
+    wrap_modulo = (2<<bte) if bte > 0 else 1
+    bitmask = wrap_modulo-1
+    bus_read = [None for i in sram_prefill]
+    adr_verify = []
 
     harness = WbMaster(dut)
+    adr_shift = harness.wbs._width//8
     clk_gen = make_clock(harness.dut, 100)
 
     await harness.reset()
+    await harness.sram_write((adr_offset // adr_shift) & (~bitmask), sram_prefill)
     responses = await harness.wb_inc_adr_burst_cycle(adr, bus_read, acktimeout=3, bte=bte)
 
     for res in responses:
         adr_verify.append(res.adr)
-
     adr_verify_start = min(adr_verify)
-    # for i in range(bus_read):
-    #     assert responses[i] == sram[adr_verify[i]-adr_verify_start]
+
+    for i in range(len(adr_verify)):
+        assert responses[i].datrd == sram_prefill[adr_verify[i]-adr_verify_start]
 
     clk_gen.kill()
 
 
 @cocotb.test()
 async def test_write(dut):
-    adr = 0x10000004
-    bus_write = [10, 20, 30, 40, 50, 60, 70, 80]
-    adr_verify = []
+    adr_base = 0x10000000
+    adr_offset = 0x4
     bte = 0b01
-    sram = [] # replace with second port access to the prefilled SRAM
+    bus_write = [10, 20, 30, 40, 50, 60, 70, 80]
+
+    adr = adr_base + adr_offset
+    wrap_modulo = (2<<bte) if bte > 0 else 1
+    bitmask = wrap_modulo-1
+    adr_verify = []
 
     harness = WbMaster(dut)
+    adr_shift = harness.wbs._width//8
     clk_gen = make_clock(harness.dut, 100)
 
     await harness.reset()
     responses = await harness.wb_inc_adr_burst_cycle(adr, bus_write, acktimeout=3, bte=bte)
+    sram_read = await harness.sram_read((adr_offset // adr_shift) & (~bitmask), len(bus_write))
+    print(sram_read)
 
     for res in responses:
         adr_verify.append(res.adr)
-
     adr_verify_start = min(adr_verify)
-    # for i in range(bus_write):
-    #     assert bus_write[adr_verify[i]-adr_verify_start] == sram[adr_verify[i]-adr_verify_start]
+
+    for i in range(len(adr_verify)):
+        assert bus_write[i] == sram_read[i]
 
     clk_gen.kill()
 
 
 @cocotb.test()
 async def test_read_with_write_tail(dut):
-    adr = 0x10000004
-    bus_read = [None, None, None, None, None, None, None, None]
+    adr_base = 0x10000000
+    adr_offset = 0x4
+    bte = 0b01
+    tail = (adr_base+adr_offset, 60)
+    sram_prefill = [10, 20, 30, 40, 50, 60, 70, 80]
+
+    adr = adr_base + adr_offset
+    wrap_modulo = (2<<bte) if bte > 0 else 1
+    bitmask = wrap_modulo-1
+    bus_read = [None for i in sram_prefill]
     adr_verify = []
-    bte = 0b00
-    tail = (adr, 1)
-    sram = [] # replace with second port access to the prefilled SRAM
 
     harness = WbMaster(dut)
+    adr_shift = harness.wbs._width//8
     clk_gen = make_clock(harness.dut, 100)
 
     await harness.reset()
+    await harness.sram_write((adr_offset // adr_shift) & (~bitmask), sram_prefill)
     responses = await harness.wb_inc_adr_burst_cycle(adr, bus_read, acktimeout=3, bte=bte, end=tail)
 
     for res in responses[:-1]:
         adr_verify.append(res.adr)
 
     adr_verify_start = min(adr_verify)
-    # for i in range(bus_read):
-    #     assert responses[i] == sram[adr_verify[i]-adr_verify_start]
+    for i in range(len(adr_verify)):
+        assert responses[i].datrd == sram_prefill[adr_verify[i]-adr_verify_start]
+
+    # TODO: verify end operation
 
     clk_gen.kill()
 
 
 @cocotb.test()
 async def test_write_with_read_tail(dut):
-    adr = 0x10000004
+    adr_base = 0x10000000
+    adr_offset = 0x4
+    bte = 0b01
     bus_write = [10, 20, 30, 40, 50, 60, 70, 80]
+    tail = (adr_base+adr_offset, None)
+
+    adr = adr_base + adr_offset
+    wrap_modulo = (2<<bte) if bte > 0 else 1
+    bitmask = wrap_modulo-1
     adr_verify = []
-    bte = 0b00
-    tail = (adr, None)
-    sram = [] # replace with second port access to the prefilled SRAM
 
     harness = WbMaster(dut)
+    adr_shift = harness.wbs._width//8
     clk_gen = make_clock(harness.dut, 100)
 
     await harness.reset()
     responses = await harness.wb_inc_adr_burst_cycle(adr, bus_write, acktimeout=3, bte=bte, end=tail)
+    sram_read = await harness.sram_read((adr_offset // adr_shift) & (~bitmask), len(bus_write))
+    print(sram_read)
 
     for res in responses[:-1]:
         adr_verify.append(res.adr)
 
     adr_verify_start = min(adr_verify)
-    # for i in range(bus_write):
-    #     assert bus_write[adr_verify[i]-adr_verify_start] == sram[adr_verify[i]-adr_verify_start]
+    for i in range(len(adr_verify)):
+        assert bus_write[i] == sram_read[i]
+
+    # TODO: verify end operation
 
     clk_gen.kill()

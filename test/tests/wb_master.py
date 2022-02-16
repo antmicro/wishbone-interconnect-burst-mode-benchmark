@@ -46,6 +46,9 @@ class WbMaster(object):
         self.dut.io_fifo_dat_rx.value = 0
         self.dut.io_fifo_stb_rx.value = 0
         self.dut.io_fifo_stb_tx.value = 0
+        self.dut.io_sram_adr.value = 0
+        self.dut.io_sram_datwr.value = 0
+        self.dut.io_sram_we.value = 0
         self.dut.reset.value = 1
         await ClockCycles(self.dut.clk, 3)
         self.dut.reset.value = 0
@@ -121,9 +124,9 @@ class WbMaster(object):
         for i in range(length):
             self.dut.io_sram_we.value = 0
             self.dut.io_sram_adr.value = addr + i
-            await ClockCycles(self.dut.clk, 1)
+            await ClockCycles(self.dut.clk, 2)
             words.append(self.dut.io_sram_datrd.value)
-            await ClockCycles(self.dut.clk, 1)
+            #await ClockCycles(self.dut.clk, 1)
 
         return words
 
