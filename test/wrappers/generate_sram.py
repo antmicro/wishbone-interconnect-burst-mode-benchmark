@@ -7,6 +7,7 @@ from litex.build.generic_platform import Pins, Subsignal
 from litex.soc.integration.soc_core import SoCCore
 from litex.soc.integration.builder import Builder
 from litex.soc.interconnect import wishbone
+from fifo_transceiver import TestFIFOTransceiver
 
 import argparse
 
@@ -24,6 +25,13 @@ _io = [
         Subsignal("cti",   Pins(3)),
         Subsignal("bte",   Pins(2)),
         Subsignal("err",   Pins(1))),
+    ("fifo", 0,
+        Subsignal("dat_rx", Pins(32)),
+        Subsignal("dat_tx", Pins(32)),
+        Subsignal("stb_rx", Pins(1)),
+        Subsignal("stb_tx", Pins(1)),
+        Subsignal("wait_rx", Pins(1)),
+        Subsignal("wait_tx", Pins(1))),
     ("clk", 0, Pins(1)),
     ("reset", 0, Pins(1)),
 ]
@@ -79,6 +87,7 @@ class BaseSoC(SoCCore):
         "sram": 0x10000000,  # (default shadow @0xa0000000)
         "spiflash": 0x20000000,  # (default shadow @0xa0000000)
         "main_ram": 0x40000000,  # (default shadow @0xc0000000)
+        "fifo": 0xd0000000,
         "csr": 0xe0000000,
     }
 
@@ -109,73 +118,11 @@ class BaseSoC(SoCCore):
         self.comb += wb.connect(sim_wishbone)
         self.add_wb_master(sim_wishbone)
 
-
-def add_fsm_state_names():
-    """Hack the FSM module to add state names to the output"""
-    from migen.fhdl.visit import NodeTransformer
-    from migen.genlib.fsm import NextState, NextValue, _target_eq
-    from migen.fhdl.bitcontainer import value_bits_sign
-
-    class My_LowerNext(NodeTransformer):
-        def __init__(self, next_state_signal, next_state_name_signal, encoding,
-                     aliases):
-            self.next_state_signal = next_state_signal
-            self.next_state_name_signal = next_state_name_signal
-            self.encoding = encoding
-            self.aliases = aliases
-            # (target, next_value_ce, next_value)
-            self.registers = []
-
-        def _get_register_control(self, target):
-            for x in self.registers:
-                if _target_eq(target, x[0]):
-                    return x[1], x[2]
-            raise KeyError
-
-        def visit_unknown(self, node):
-            if isinstance(node, NextState):
-                try:
-                    actual_state = self.aliases[node.state]
-                except KeyError:
-                    actual_state = node.state
-                return [
-                    self.next_state_signal.eq(self.encoding[actual_state]),
-                    self.next_state_name_signal.eq(
-                        int.from_bytes(actual_state.encode(), byteorder="big"))
-                ]
-            elif isinstance(node, NextValue):
-                try:
-                    next_value_ce, next_value = self._get_register_control(
-                        node.target)
-                except KeyError:
-                    related = node.target if isinstance(node.target,
-                                                        Signal) else None
-                    next_value = Signal(bits_sign=value_bits_sign(node.target),
-                                        related=related)
-                    next_value_ce = Signal(related=related)
-                    self.registers.append(
-                        (node.target, next_value_ce, next_value))
-                return next_value.eq(node.value), next_value_ce.eq(1)
-            else:
-                return node
-
-    import migen.genlib.fsm as fsm
-
-    def my_lower_controls(self):
-        self.state_name = Signal(len(max(self.encoding, key=len)) * 8,
-                                 reset=int.from_bytes(
-                                     self.reset_state.encode(),
-                                     byteorder="big"))
-        self.next_state_name = Signal(len(max(self.encoding, key=len)) * 8,
-                                      reset=int.from_bytes(
-                                          self.reset_state.encode(),
-                                          byteorder="big"))
-        self.comb += self.next_state_name.eq(self.state_name)
-        self.sync += self.state_name.eq(self.next_state_name)
-        return My_LowerNext(self.next_state, self.next_state_name,
-                            self.encoding, self.state_aliases)
-
-    fsm.FSM._lower_controls = my_lower_controls
+        # FIFO
+        fifo_pins = self.platform.request('fifo')
+        self.submodules.fifo = TestFIFOTransceiver(fifo_pins, 8)
+        self.add_memory_region("fifo", self.mem_map["fifo"], self.bus.data_width//8, type=[])
+        self.add_wb_slave(self.mem_map["fifo"], self.fifo.bus)
 
 
 def generate(output_dir, csr_csv):
@@ -202,7 +149,6 @@ def main():
                         default='csr.csv',
                         help='csr file (default: %(default)s)')
     args = parser.parse_args()
-    add_fsm_state_names()
     output_dir = args.dir
     generate(output_dir, args.csr)
 

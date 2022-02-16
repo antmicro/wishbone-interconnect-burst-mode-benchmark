@@ -13,6 +13,12 @@ module tb(
         input io_wbs_sel,
         input io_wbs_err,
         input [2:0] io_wbs_cti,
+  input [31:0] io_fifo_dat_rx,
+  output [31:0] io_fifo_dat_tx,
+  input wire io_fifo_stb_rx,
+  output wire io_fifo_stb_tx,
+  output wire io_fifo_wait_rx,
+  output wire io_fifo_wait_tx,
 	input [4095:0] test_name
 );
 
@@ -33,7 +39,13 @@ dut dut(
         .wishbone_sel(io_wbs_sel),
         .wishbone_cti(io_wbs_cti),
         .wishbone_bte(io_wbs_bte),
-        .wishbone_err(io_wbs_err)
+        .wishbone_err(io_wbs_err),
+  .fifo_dat_rx(io_fifo_dat_rx),
+  .fifo_dat_tx(io_fifo_dat_tx),
+  .fifo_stb_rx(io_fifo_stb_rx),
+  .fifo_stb_tx(io_fifo_stb_tx),
+  .fifo_wait_rx(io_fifo_wait_rx),
+  .fifo_wait_tx(io_fifo_wait_tx)
 );
 
   // Dump waves
