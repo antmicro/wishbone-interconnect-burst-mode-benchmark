@@ -17,34 +17,37 @@ from cocotb.triggers import FallingEdge
 from cocotb.triggers import ClockCycles
 from cocotb.binary import BinaryValue
 from .common import make_clock
-from .wb_master import WbMaster
+from .wb_master import WbMaster, wrap_bitmask
 
 
 @cocotb.test()
 async def test_read(dut):
-    adr_base = 0x10000000
-    adr_offset = 0x4
+    # parameters
+    adr_base = 0x10000000 # base peripheral address (byte addressed, look at csr.csv)
+    adr_offset = 0x4 # offset from which you want to start (byte addressed)
     bte = 0b01
+    # initial RAM contents, starting from offset with wrap lsb masked out
     sram_prefill = [10, 20, 30, 40, 50, 60, 70, 80]
 
-    adr = adr_base + adr_offset
-    wrap_modulo = (2<<bte) if bte > 0 else 1
-    bitmask = wrap_modulo-1
+    # bus data writes
     bus_read = [None for i in sram_prefill]
-    adr_verify = []
 
+    # setup
     harness = WbMaster(dut)
-    adr_shift = harness.wbs._width//8
     clk_gen = make_clock(harness.dut, 100)
 
+    # action!
     await harness.reset()
-    await harness.sram_write((adr_offset // adr_shift) & (~bitmask), sram_prefill)
-    responses = await harness.wb_inc_adr_burst_cycle(adr, bus_read, acktimeout=3, bte=bte)
+    await harness.sram_write(adr_offset, sram_prefill, wrap_bitmask(bte))
+    responses = await harness.wb_inc_adr_burst_cycle(adr_base + adr_offset, bus_read, acktimeout=3, bte=bte)
 
+    # get operations addresses in execution order
+    adr_verify = []
     for res in responses:
         adr_verify.append(res.adr)
-    adr_verify_start = min(adr_verify)
 
+    # verify if bus reads match initial RAM contents
+    adr_verify_start = min(adr_verify)
     for i in range(len(adr_verify)):
         assert responses[i].datrd == sram_prefill[adr_verify[i]-adr_verify_start]
 
@@ -53,29 +56,28 @@ async def test_read(dut):
 
 @cocotb.test()
 async def test_write(dut):
-    adr_base = 0x10000000
-    adr_offset = 0x4
+    # parameters
+    adr_base = 0x10000000 # base peripheral address (byte addressed, look at csr.csv)
+    adr_offset = 0x4 # offset from which you want to start (byte addressed)
     bte = 0b01
+    # target RAM contents, starting from offset with wrap lsb masked out
     bus_write = [10, 20, 30, 40, 50, 60, 70, 80]
 
-    adr = adr_base + adr_offset
-    wrap_modulo = (2<<bte) if bte > 0 else 1
-    bitmask = wrap_modulo-1
-    adr_verify = []
-
+    # setup
     harness = WbMaster(dut)
-    adr_shift = harness.wbs._width//8
     clk_gen = make_clock(harness.dut, 100)
 
+    # action!
     await harness.reset()
-    responses = await harness.wb_inc_adr_burst_cycle(adr, bus_write, acktimeout=3, bte=bte)
-    sram_read = await harness.sram_read((adr_offset // adr_shift) & (~bitmask), len(bus_write))
-    print(sram_read)
+    responses = await harness.wb_inc_adr_burst_cycle(adr_base + adr_offset, bus_write, acktimeout=3, bte=bte)
+    sram_read = await harness.sram_read(adr_offset, len(bus_write), wrap_bitmask(bte))
 
+    # get operations addresses in execution order
+    adr_verify = []
     for res in responses:
         adr_verify.append(res.adr)
-    adr_verify_start = min(adr_verify)
 
+    # verify if RAM contents match bus writes
     for i in range(len(adr_verify)):
         assert bus_write[i] == sram_read[i]
 
@@ -84,29 +86,33 @@ async def test_write(dut):
 
 @cocotb.test()
 async def test_read_with_write_tail(dut):
-    adr_base = 0x10000000
-    adr_offset = 0x4
+    # parameters
+    adr_base = 0x10000000 # base peripheral address (byte addressed, look at csr.csv)
+    adr_offset = 0x4 # offset from which you want to start (byte addressed)
     bte = 0b01
-    tail = (adr_base+adr_offset, 60)
+    # initial RAM contents, starting from offset with wrap lsb masked out
     sram_prefill = [10, 20, 30, 40, 50, 60, 70, 80]
+    # separate single operation executed when ending burst cycle
+    tail = (adr_base+adr_offset, 60)
 
-    adr = adr_base + adr_offset
-    wrap_modulo = (2<<bte) if bte > 0 else 1
-    bitmask = wrap_modulo-1
+    # bus data writes
     bus_read = [None for i in sram_prefill]
-    adr_verify = []
 
+    # setup
     harness = WbMaster(dut)
-    adr_shift = harness.wbs._width//8
     clk_gen = make_clock(harness.dut, 100)
 
+    # action!
     await harness.reset()
-    await harness.sram_write((adr_offset // adr_shift) & (~bitmask), sram_prefill)
-    responses = await harness.wb_inc_adr_burst_cycle(adr, bus_read, acktimeout=3, bte=bte, end=tail)
+    await harness.sram_write(adr_offset, sram_prefill, wrap_bitmask(bte))
+    responses = await harness.wb_inc_adr_burst_cycle(adr_base + adr_offset, bus_read, acktimeout=3, bte=bte, end=tail)
 
+    # get operations addresses in execution order
+    adr_verify = []
     for res in responses[:-1]:
         adr_verify.append(res.adr)
 
+    # verify if bus reads match initial RAM contents
     adr_verify_start = min(adr_verify)
     for i in range(len(adr_verify)):
         assert responses[i].datrd == sram_prefill[adr_verify[i]-adr_verify_start]
@@ -118,30 +124,30 @@ async def test_read_with_write_tail(dut):
 
 @cocotb.test()
 async def test_write_with_read_tail(dut):
-    adr_base = 0x10000000
-    adr_offset = 0x4
+    # parameters
+    adr_base = 0x10000000 # base peripheral address (byte addressed, look at csr.csv)
+    adr_offset = 0x4 # offset from which you want to start (byte addressed)
     bte = 0b01
+    # target RAM contents, starting from offset with wrap lsb masked out
     bus_write = [10, 20, 30, 40, 50, 60, 70, 80]
+    # separate single operation executed when ending burst cycle
     tail = (adr_base+adr_offset, None)
 
-    adr = adr_base + adr_offset
-    wrap_modulo = (2<<bte) if bte > 0 else 1
-    bitmask = wrap_modulo-1
-    adr_verify = []
-
+    # setup
     harness = WbMaster(dut)
-    adr_shift = harness.wbs._width//8
     clk_gen = make_clock(harness.dut, 100)
 
+    # action!
     await harness.reset()
-    responses = await harness.wb_inc_adr_burst_cycle(adr, bus_write, acktimeout=3, bte=bte, end=tail)
-    sram_read = await harness.sram_read((adr_offset // adr_shift) & (~bitmask), len(bus_write))
-    print(sram_read)
+    responses = await harness.wb_inc_adr_burst_cycle(adr_base + adr_offset, bus_write, acktimeout=3, bte=bte, end=tail)
+    sram_read = await harness.sram_read(adr_offset, len(bus_write), wrap_bitmask(bte))
 
+    # get operations addresses in execution order
+    adr_verify = []
     for res in responses[:-1]:
         adr_verify.append(res.adr)
 
-    adr_verify_start = min(adr_verify)
+    # verify if RAM contents match bus writes
     for i in range(len(adr_verify)):
         assert bus_write[i] == sram_read[i]
 
