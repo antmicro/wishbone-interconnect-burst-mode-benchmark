@@ -28,6 +28,9 @@ def dump(obj):
                 print("%s = %r, " % (attr, getattr(obj, attr)), end='')
     print("")
 
+def wrap_bitmask(bte):
+    wrap_modulo = (2 << bte) if (bte > 0) else 1
+    return wrap_modulo-1
 
 class WbMaster(object):
     def __init__(self, dut, **kwargs):
@@ -58,23 +61,21 @@ class WbMaster(object):
 
     @cocotb.coroutine
     async def wb_classic_cycle(self, requests, idle=0, acktimeout=1):
-        ops = []
-        result = []
         adr_shift = self.wbs._width//8
 
+        ops = []
         for req in requests:
             ops.append(WBOp(req[0] // adr_shift, req[1], idle=idle, acktimeout=acktimeout))
 
         responses = await self.wbs.send_cycle(ops)
 
+        result = []
         for res in responses:
             result.append((res.adr * adr_shift, res.datrd))
         return result
 
     @cocotb.coroutine
     async def wb_const_adr_burst_cycle(self, adr, data, idle=0, acktimeout=1, end=None):
-        ops = []
-        result = []
         adr_shift = self.wbs._width//8
 
         if not isinstance(data, list):
@@ -82,6 +83,7 @@ class WbMaster(object):
         if len(data) < 2:
             raise TestError("burst cycle: data list has less than 2 elements")
 
+        ops = []
         for word in data:
             ops.append(WBOp(adr // adr_shift, word, idle=idle, acktimeout=acktimeout, cti=0b001))
         ops[-1].cti = 0b111 # last request ends with End-of-Burst to inform slave that it can terminate current data phase
@@ -90,6 +92,7 @@ class WbMaster(object):
 
         responses = await self.wbs.send_cycle(ops)
 
+        result = []
         for res in responses:
             result.append((res.adr * adr_shift, res.datrd))
         return result
@@ -119,11 +122,14 @@ class WbMaster(object):
         return stream
 
     @cocotb.coroutine
-    async def sram_read(self, addr, length):
+    async def sram_read(self, addr, length, mask=0):
+        adr_shift = self.wbs._width//8
+        mem_start = (addr // adr_shift) & (~mask)
+
         words = []
         for i in range(length):
             self.dut.io_sram_we.value = 0
-            self.dut.io_sram_adr.value = addr + i
+            self.dut.io_sram_adr.value = mem_start + i
             await ClockCycles(self.dut.clk, 2)
             words.append(self.dut.io_sram_datrd.value)
             #await ClockCycles(self.dut.clk, 1)
@@ -131,21 +137,20 @@ class WbMaster(object):
         return words
 
     @cocotb.coroutine
-    async def sram_write(self, addr, data):
-        words = []
+    async def sram_write(self, addr, data, mask=0):
+        adr_shift = self.wbs._width // 8
+        mem_start = (addr // adr_shift) & (~mask)
+
         for i in range(len(data)):
-            self.dut.io_sram_adr.value = addr + i
+            self.dut.io_sram_adr.value = mem_start + i
             self.dut.io_sram_datwr.value = data[i]
             self.dut.io_sram_we.value = 1
             await ClockCycles(self.dut.clk, 1)
             self.dut.io_sram_we.value = 0
             await ClockCycles(self.dut.clk, 1)
 
-        return words
-
     @cocotb.coroutine
     async def wb_inc_adr_burst_cycle(self, adr, data, idle=0, acktimeout=1, bte=0b00, end=None):
-        ops = []
         adr_shift = self.wbs._width//8
 
         if not isinstance(data, list):
@@ -153,12 +158,12 @@ class WbMaster(object):
         if len(data) < 2:
             raise TestError("burst cycle: data list has less than 2 elements")
 
-        wrap_modulo = (2 << bte) if (bte > 0) else 1
-        wrap_mask = wrap_modulo-1
+        wrap_mask = wrap_bitmask(bte)
 
         adr_base = (adr//adr_shift) & (~wrap_mask)
         cnt_offset = (adr//adr_shift) & wrap_mask
 
+        ops = []
         for i in range(len(data)):
             # lsb = counter + offset, overflow ignored
             offset_lsb = (i+cnt_offset) & wrap_mask
@@ -166,14 +171,10 @@ class WbMaster(object):
             offset_msb = i & (~wrap_mask)
             offset = offset_msb + offset_lsb
             ops.append(WBOp(adr_base + offset, data[offset], idle=idle, acktimeout=acktimeout, cti=0b010, bte=bte))
-
         ops[-1].cti = 0b111 # last request ends with End-of-Burst to inform slave that it can terminate current data phase
         if isinstance(end, tuple):
             ops.append(WBOp(end[0] // adr_shift, end[1], idle=idle, acktimeout=acktimeout, cti=0b111, bte=bte))
 
         responses = await self.wbs.send_cycle(ops)
-
-        for res in responses:
-            dump(res)
 
         return responses
