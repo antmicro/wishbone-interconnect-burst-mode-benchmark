@@ -1,29 +1,21 @@
-# Default to verilog
-TOPLEVEL_LANG ?= verilog
-
-PWD=$(shell pwd)
-
-PYTHONPATH := $(PWD)/..:$(PYTHONPATH)
-
-TEST_SCRIPT ?= test-classic
 TARGET = sram
 
-VERILOG_SOURCES = $(PWD)/dut.v $(PWD)/tb.v
-TOPLEVEL = tb
 WRAPPER_SCRIPT = wrappers/generate_$(TARGET).py
-MODULE = tests.$(TEST_SCRIPT)
 
-CUSTOM_COMPILE_DEPS = $(PWD)/dut.v
+all: tb.v dut.v prepare
 
-include $(shell cocotb-config --makefiles)/Makefile.sim
+prepare: tb.v dut.v
+	pytest -m compile test.py
 
-$(PWD)/tb.v: $(PWD)/wrappers/tb_$(TARGET).v
-	cp $(PWD)/wrappers/tb_$(TARGET).v ./tb.v
+test: tb.v dut.v
+	pytest -m 'not compile' test.py
 
-$(PWD)/dut.v: $(WRAPPER_SCRIPT) $(PWD)/tb.v $(TARGET_DEPS)
-	cd ..
+tb.v: wrappers/tb_$(TARGET).v
+	cp wrappers/tb_$(TARGET).v ./tb.v
+
+dut.v: $(WRAPPER_SCRIPT) tb.v
 	python3 $(WRAPPER_SCRIPT) $(TARGET_OPTIONS)
 	mv build/gateware/dut.v .
 
-clean-all: clean
-	rm -r build dut.v tb.v results.xml dump.vcd csr.csv
+clean:
+	rm -r build sim_build __pycache__ dut.v tb.v results.xml dump.vcd csr.csv

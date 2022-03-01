@@ -54,9 +54,9 @@ module tb(
   );
 
   // Dump waves
-  initial begin
-    $dumpfile("dump.vcd");
-    $dumpvars(0, tb);
-  end
+  //initial begin
+    //$dumpfile("dump.vcd");
+    //$dumpvars(0, tb);
+  //end
 
 endmodule

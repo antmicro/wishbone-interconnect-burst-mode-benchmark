@@ -1,3 +1,4 @@
 cocotb
+cocotb-test
 #git+https://github.com/wallento/cocotbext-wishbone.git
 git+https://github.com/antmicro/cocotbext-wishbone.git@rkol/driver-burst
