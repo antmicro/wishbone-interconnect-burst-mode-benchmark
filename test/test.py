@@ -6,8 +6,10 @@ import pytest
 from cocotb_test.simulator import run
 
 def get_memory_regions():
+    file = open("csr.csv")
     data = list(csv.reader(filter(lambda row: row[0] != "#",
-                                  open("csr.csv"))))
+                                  file)))
+    file.close()
     output = {}
     for i in data:
         if i[0] == "memory_region":
@@ -30,17 +32,17 @@ def test_compile():
 @pytest.mark.parametrize("length", [1, 2, 4, 8, 16])
 def test_sram_classic(offset, length):
     reg = mem_regs["sram"]
-    parameters = {
-        "adr_base": reg["base_address"],
-        "adr_offset": offset,
-        "length": length,
-        "sram_fill": 1,
+    extra_env = {
+        "adr_base": str(reg["base_address"]),
+        "adr_offset": str(offset),
+        "length": str(length),
+        "sram_fill": str(1),
     }
     run(
         verilog_sources=["dut.v", "tb.v"],
         toplevel="tb",
         module="tests.test-classic",
-        parameters=parameters,
+        extra_env=extra_env,
         waves=True,
     )
 
@@ -49,18 +51,18 @@ def test_sram_classic(offset, length):
 @pytest.mark.parametrize("bte", range(4))
 def test_sram_incrementing(offset, length, bte):
     reg = mem_regs["sram"]
-    parameters = {
-        "adr_base": reg["base_address"],
-        "adr_offset": offset,
-        "length": length,
-        "bte": bte,
-        "sram_fill": 1,
+    extra_env = {
+        "adr_base": str(reg["base_address"]),
+        "adr_offset": str(offset),
+        "length": str(length),
+        "bte": str(bte),
+        "sram_fill": str(1),
     }
     run(
         verilog_sources=["dut.v", "tb.v"],
         toplevel="tb",
         module="tests.test-incrementing",
-        parameters=parameters,
+        extra_env=extra_env,
         waves=True,
     )
 
@@ -68,15 +70,15 @@ def test_sram_incrementing(offset, length, bte):
 @pytest.mark.parametrize("module", ["tests.test-classic", "tests.test-constant"])
 def test_fifo(module, length):
     reg = mem_regs["fifo"]
-    parameters = {
-        "adr_base": reg["base_address"],
-        "length": length,
-        "fifo_fill": 1,
+    extra_env = {
+        "adr_base": str(reg["base_address"]),
+        "length": str(length),
+        "fifo_fill": str(1),
     }
     run(
         verilog_sources=["dut.v", "tb.v"],
         toplevel="tb",
         module=module,
-        parameters=parameters,
+        extra_env=extra_env,
         waves=True,
     )
