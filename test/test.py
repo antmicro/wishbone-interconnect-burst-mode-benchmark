@@ -28,8 +28,8 @@ def test_compile():
         compile_only=True,
     )
 
-@pytest.mark.parametrize("offset", range(16))
-@pytest.mark.parametrize("length", [1, 2, 4, 8, 16])
+@pytest.mark.parametrize("offset", range(0, 16, 4))
+@pytest.mark.parametrize("length", [2, 4, 8, 16])
 def test_sram_classic(offset, length):
     reg = mem_regs["sram"]
     extra_env = {
@@ -46,8 +46,8 @@ def test_sram_classic(offset, length):
         waves=True,
     )
 
-@pytest.mark.parametrize("offset", range(16))
-@pytest.mark.parametrize("length", [1, 2, 4, 8, 16])
+@pytest.mark.parametrize("offset", range(0, 16, 4))
+@pytest.mark.parametrize("length", [2, 4, 8, 16])
 @pytest.mark.parametrize("bte", range(4))
 def test_sram_incrementing(offset, length, bte):
     reg = mem_regs["sram"]
@@ -66,9 +66,8 @@ def test_sram_incrementing(offset, length, bte):
         waves=True,
     )
 
-@pytest.mark.parametrize("length", [1, 2, 4, 8, 16])
-@pytest.mark.parametrize("module", ["tests.test-classic", "tests.test-constant"])
-def test_fifo(module, length):
+@pytest.mark.parametrize("length", range(2,9))
+def test_fifo_classic(length):
     reg = mem_regs["fifo"]
     extra_env = {
         "adr_base": str(reg["base_address"]),
@@ -78,7 +77,23 @@ def test_fifo(module, length):
     run(
         verilog_sources=["dut.v", "tb.v"],
         toplevel="tb",
-        module=module,
+        module="tests.test-classic",
+        extra_env=extra_env,
+        waves=True,
+    )
+
+@pytest.mark.parametrize("length", range(2,9))
+def test_fifo_constant(length):
+    reg = mem_regs["fifo"]
+    extra_env = {
+        "adr_base": str(reg["base_address"]),
+        "length": str(length),
+        "fifo_fill": str(1),
+    }
+    run(
+        verilog_sources=["dut.v", "tb.v"],
+        toplevel="tb",
+        module="tests.test-constant",
         extra_env=extra_env,
         waves=True,
     )
