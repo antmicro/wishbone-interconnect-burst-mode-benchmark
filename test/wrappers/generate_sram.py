@@ -17,7 +17,7 @@ _io = [
         Subsignal("adr",   Pins(30)),
         Subsignal("dat_r", Pins(32)),
         Subsignal("dat_w", Pins(32)),
-        Subsignal("sel",   Pins(1)),
+        Subsignal("sel",   Pins(4)),
         Subsignal("cyc",   Pins(1)),
         Subsignal("stb",   Pins(1)),
         Subsignal("ack",   Pins(1)),

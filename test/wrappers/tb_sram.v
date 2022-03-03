@@ -37,7 +37,7 @@ module tb(
     .wishbone_stb(io_wbs_stb),
     .wishbone_ack(io_wbs_ack),
     .wishbone_we(io_wbs_we),
-    .wishbone_sel(io_wbs_sel),
+    .wishbone_sel({io_wbs_sel, io_wbs_sel, io_wbs_sel, io_wbs_sel}),
     .wishbone_cti(io_wbs_cti),
     .wishbone_bte(io_wbs_bte),
     .wishbone_err(io_wbs_err),
