@@ -5,11 +5,14 @@ import random
 import pytest
 from cocotb_test.simulator import run
 
-def get_memory_regions():
-    file = open("csr.csv")
+def read_csr(filename):
+    file = open(filename)
     data = list(csv.reader(filter(lambda row: row[0] != "#",
                                   file)))
     file.close()
+    return data
+
+def get_csr_memory_regions(data):
     output = {}
     for i in data:
         if i[0] == "memory_region":
@@ -17,7 +20,17 @@ def get_memory_regions():
                             "size": int(i[3])}
     return output
 
-mem_regs = get_memory_regions()
+def get_csr_constants(data):
+    output = {}
+    for i in data:
+        if i[0] == "constant":
+            output[i[1]] = i[2]
+    return output
+
+csr = read_csr("csr.csv")
+mem_regs = get_csr_memory_regions(csr)
+consts = get_csr_constants(csr)
+
 
 @pytest.mark.compile
 def test_compile():
@@ -35,6 +48,7 @@ def test_sram_classic(offset, length):
     extra_env = {
         "adr_base": str(reg["base_address"]),
         "adr_offset": str(offset),
+        "adr_inc": str(4),
         "length": str(length),
         "sram_fill": str(1),
     }
@@ -54,6 +68,7 @@ def test_sram_incrementing(offset, length, bte):
     extra_env = {
         "adr_base": str(reg["base_address"]),
         "adr_offset": str(offset),
+        "adr_inc": str(4),
         "length": str(length),
         "bte": str(bte),
         "sram_fill": str(1),

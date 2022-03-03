@@ -69,10 +69,7 @@ class WbMaster(object):
 
         responses = await self.wbs.send_cycle(ops)
 
-        result = []
-        for res in responses:
-            result.append((res.adr * adr_shift, res.datrd))
-        return result
+        return responses
 
     @cocotb.coroutine
     async def wb_const_adr_burst_cycle(self, adr, data, idle=0, acktimeout=1, end=None):
@@ -107,6 +104,7 @@ class WbMaster(object):
             self.dut.io_fifo_stb_rx.value = 0
             await ClockCycles(self.dut.clk, 1)
             self.dut.io_fifo_dat_rx.value = 0
+            self.dut._log.info("fifo write: {}".format( self.dut.io_fifo_dat_rx.value ))
 
     @cocotb.coroutine
     async def fifo_read(self, length):
@@ -118,6 +116,7 @@ class WbMaster(object):
             await ClockCycles(self.dut.clk, 1)
             self.dut.io_fifo_stb_tx.value = 0
             await ClockCycles(self.dut.clk, 1)
+            self.dut._log.info("fifo read: {}".format( self.dut.io_fifo_dat_tx.value ))
         
         return stream
 
@@ -132,7 +131,8 @@ class WbMaster(object):
             self.dut.io_sram_adr.value = mem_start + i
             await ClockCycles(self.dut.clk, 2)
             words.append(self.dut.io_sram_datrd.value)
-            #await ClockCycles(self.dut.clk, 1)
+            await ClockCycles(self.dut.clk, 2)
+            self.dut._log.info("sram read: {} @ {:08x}".format( self.dut.io_sram_datrd.value, self.dut.io_sram_adr.value * adr_shift ))
 
         return words
 
@@ -143,11 +143,12 @@ class WbMaster(object):
 
         for i in range(len(data)):
             self.dut.io_sram_adr.value = mem_start + i
-            self.dut.io_sram_datwr.value = data[i]
+            self.dut.io_sram_datwr.value = BinaryValue(data[i])
             self.dut.io_sram_we.value = 1
             await ClockCycles(self.dut.clk, 1)
             self.dut.io_sram_we.value = 0
             await ClockCycles(self.dut.clk, 1)
+            self.dut._log.info("sram write: {} @ {:08x}".format( self.dut.io_sram_datwr.value, self.dut.io_sram_adr.value * adr_shift ))
 
     @cocotb.coroutine
     async def wb_inc_adr_burst_cycle(self, adr, data, idle=0, acktimeout=1, bte=0b00, end=None):

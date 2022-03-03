@@ -2,6 +2,7 @@ from os import environ
 
 import os
 import sys
+import random
 import cocotb
 import logging
 import inspect
@@ -20,61 +21,81 @@ from .common import make_clock
 from .wb_master import WbMaster
 
 
-# TODO: SRAM prefill
-@cocotb.test(skip=True)
+@cocotb.test()
 async def test_read(dut):
-    ops_read = [(0x10000000, None), (0x10000004, None), (0x10000008, None), (0x1000000c, None)]
+    # parameters
+    adr_base = int(os.environ.get("adr_base", "3489660928")) # base peripheral address (byte addressed, look at csr.csv)
+    adr_offset = int(os.environ.get("adr_offset", "0")) # offset from which you want to start (byte addressed)
+    adr_inc = int(os.environ.get("adr_inc", "0")) # address increments in bytes
+    length = int(os.environ.get("length", "4"))
+    sram_fill = int(os.environ.get("sram_fill", "0"))
+    fifo_fill = int(os.environ.get("fifo_fill", "0"))
+
+    # prepare data and addresses
+    test_data = random.sample(range(0x80000000, 0xffffffff), length)
+    ops_read = []
+    for i in range(length):
+        ops_read.append((adr_base+adr_offset+(i*adr_inc), None))
+
+    # setup
     harness = WbMaster(dut)
     clk_gen = make_clock(harness.dut, 100)
 
+    # action!
     await harness.reset()
+    if fifo_fill:
+        await harness.fifo_write(test_data)
+    if sram_fill:
+        await harness.sram_write(adr_offset, test_data)
     responses = await harness.wb_classic_cycle(ops_read, acktimeout=3)
 
     clk_gen.kill()
+
+    # verify
+    for i in range(len(responses)):
+        print("{} @ {:08x} ? {}".format(responses[i].datrd, responses[i].adr, bin(test_data[i])))
+        assert responses[i].datrd == test_data[i]
 
 
 @cocotb.test()
-async def test_read_constant(dut):
-    fifo_fill = [10, 20, 30, 40]
-    ops_read = [(0xd0000000, None), (0xd0000000, None), (0xd0000000, None), (0xd0000000, None)]
-    harness = WbMaster(dut)
-    clk_gen = make_clock(harness.dut, 100)
-
-    await harness.reset()
-    await harness.fifo_write(fifo_fill)
-    responses = await harness.wb_classic_cycle(ops_read, acktimeout=3)
-
-    for i in range(len(responses)):
-        assert responses[i][1] == fifo_fill[i]
-
-    clk_gen.kill()
-
-
-@cocotb.test(skip=True)
 async def test_write(dut):
-    ops_write = [(0x10000000, None), (0x10000004, None), (0x10000008, None), (0x1000000c, None)]
+    # parameters
+    adr_base = int(os.environ.get("adr_base", "3489660928")) # base peripheral address (byte addressed, look at csr.csv)
+    adr_offset = int(os.environ.get("adr_offset", "0")) # offset from which you want to start (byte addressed)
+    adr_inc = int(os.environ.get("adr_inc", "0")) # address increments (byte addressed)
+    length = int(os.environ.get("length", "4"))
+    sram_fill = int(os.environ.get("sram_fill", "0"))
+    fifo_fill = int(os.environ.get("fifo_fill", "0"))
+
+    # prepare data and addresses
+    test_data = random.sample(range(0x80000000, 0xffffffff), length)
+    ops_write = []
+    for i in range(length):
+        t = (adr_base+adr_offset+(i*adr_inc), BinaryValue(test_data[i]))
+        print("op: {} @ {:08x}".format(t[1], t[0]))
+        ops_write.append(t)
+
+    # setup
     harness = WbMaster(dut)
     clk_gen = make_clock(harness.dut, 100)
 
+    # action!
     await harness.reset()
     responses = await harness.wb_classic_cycle(ops_write, acktimeout=3)
+    if fifo_fill:
+        fifo_rec = await harness.fifo_read(length)
+    if sram_fill:
+        sram_after = await harness.sram_read(adr_offset, length)
 
     clk_gen.kill()
 
-@cocotb.test()
-async def test_write_constant(dut):
-    ops_write = [(0xd0000000, 10), (0xd0000000, 20), (0xd0000000, 30), (0xd0000000, 40)]
-    harness = WbMaster(dut)
-    clk_gen = make_clock(harness.dut, 100)
-
-    await harness.reset()
-    responses = await harness.wb_classic_cycle(ops_write, acktimeout=3)
-    fifo_rec = await harness.fifo_read(len(ops_write))
-
+    # verify
     for i in range(len(responses)):
-        assert fifo_rec[i] == ops_write[i][1]
-
-    clk_gen.kill()
+        if fifo_fill:
+            assert fifo_rec[i] == ops_write[i][1]
+        if sram_fill:
+            print("{} @ {:08x} ? {}".format(responses[i].datwr, responses[i].adr, sram_after[i]))
+            assert sram_after[i] == responses[i].datwr
 
 
 # TODO: SRAM prefill
