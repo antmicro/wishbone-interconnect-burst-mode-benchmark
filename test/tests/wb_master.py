@@ -132,7 +132,7 @@ class WbMaster(object):
             await ClockCycles(self.dut.clk, 2)
             words.append(self.dut.io_sram_datrd.value)
             await ClockCycles(self.dut.clk, 2)
-            self.dut._log.info("sram read: {} @ {:08x}".format( self.dut.io_sram_datrd.value, self.dut.io_sram_adr.value * adr_shift ))
+            self.dut._log.info("sram read: {:08x} @ {:08x}".format( int(self.dut.io_sram_datrd.value), self.dut.io_sram_adr.value * adr_shift ))
 
         return words
 
@@ -148,7 +148,7 @@ class WbMaster(object):
             await ClockCycles(self.dut.clk, 1)
             self.dut.io_sram_we.value = 0
             await ClockCycles(self.dut.clk, 1)
-            self.dut._log.info("sram write: {} @ {:08x}".format( self.dut.io_sram_datwr.value, self.dut.io_sram_adr.value * adr_shift ))
+            self.dut._log.info("sram write: {:08x} @ {:08x}".format( int(self.dut.io_sram_datwr.value), self.dut.io_sram_adr.value * adr_shift ))
 
     @cocotb.coroutine
     async def wb_inc_adr_burst_cycle(self, adr, data, idle=0, acktimeout=1, bte=0b00, end=None):

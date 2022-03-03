@@ -53,7 +53,7 @@ async def test_read(dut):
 
     # verify
     for i in range(len(responses)):
-        print("{} @ {:08x} ? {}".format(responses[i].datrd, responses[i].adr, bin(test_data[i])))
+        print("{} @ {:08x} ? {}".format(hex(responses[i].datrd), responses[i].adr, bin(test_data[i])))
         assert responses[i].datrd == test_data[i]
 
 
@@ -71,8 +71,8 @@ async def test_write(dut):
     test_data = random.sample(range(0x80000000, 0xffffffff), length)
     ops_write = []
     for i in range(length):
-        t = (adr_base+adr_offset+(i*adr_inc), BinaryValue(test_data[i]))
-        print("op: {} @ {:08x}".format(t[1], t[0]))
+        t = (adr_base+adr_offset+(i*adr_inc), test_data[i])
+        print("op: {:08x} @ {:08x}".format(t[1], t[0]))
         ops_write.append(t)
 
     # setup
@@ -94,7 +94,7 @@ async def test_write(dut):
         if fifo_fill:
             assert fifo_rec[i] == ops_write[i][1]
         if sram_fill:
-            print("{} @ {:08x} ? {}".format(responses[i].datwr, responses[i].adr, sram_after[i]))
+            print("{:08x} @ {:08x} ? {}".format(responses[i].datwr, responses[i].adr, sram_after[i]))
             assert sram_after[i] == responses[i].datwr
 
 
