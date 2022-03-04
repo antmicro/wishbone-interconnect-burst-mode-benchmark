@@ -22,7 +22,9 @@ from cocotbext.wishbone.driver import WBOp
 def dump(obj):
     for attr in dir(obj):
         if not attr.startswith("__"):
-            if attr in ("adr, datrd, datwr"):
+            if getattr(obj, attr) == None:
+                print("%s = None, " % (attr), end='')
+            elif attr in ("adr, datrd, datwr"):
                 print("%s = 0x%08x, " % (attr, getattr(obj, attr)), end='')
             else:
                 print("%s = %r, " % (attr, getattr(obj, attr)), end='')
@@ -31,6 +33,20 @@ def dump(obj):
 def wrap_bitmask(bte):
     wrap_modulo = (2 << bte) if (bte > 0) else 1
     return wrap_modulo-1
+
+def inc_adr_gen(adr, length, mask):
+    addresses = []
+    adr_base = adr & (~mask)
+    cnt_offset = adr & mask
+
+    for i in range(length):
+        # lsb = counter + offset, overflow ignored
+        offset_lsb = (i+cnt_offset) & mask
+        # msb = counter value without wrapped bytes
+        offset_msb = i & (~mask)
+        addresses.append(adr_base + offset_msb + offset_lsb)
+
+    return addresses
 
 class WbMaster(object):
     def __init__(self, dut, **kwargs):
@@ -123,12 +139,12 @@ class WbMaster(object):
     @cocotb.coroutine
     async def sram_read(self, addr, length, mask=0):
         adr_shift = self.wbs._width//8
-        mem_start = (addr // adr_shift) & (~mask)
+        adrs = inc_adr_gen(addr//adr_shift, length, mask)
 
         words = []
         for i in range(length):
             self.dut.io_sram_we.value = 0
-            self.dut.io_sram_adr.value = mem_start + i
+            self.dut.io_sram_adr.value = adrs[i]
             await ClockCycles(self.dut.clk, 2)
             words.append(self.dut.io_sram_datrd.value)
             await ClockCycles(self.dut.clk, 2)
@@ -139,10 +155,10 @@ class WbMaster(object):
     @cocotb.coroutine
     async def sram_write(self, addr, data, mask=0):
         adr_shift = self.wbs._width // 8
-        mem_start = (addr // adr_shift) & (~mask)
+        adrs = inc_adr_gen(addr//adr_shift, len(data), mask)
 
         for i in range(len(data)):
-            self.dut.io_sram_adr.value = mem_start + i
+            self.dut.io_sram_adr.value = adrs[i]
             self.dut.io_sram_datwr.value = BinaryValue(data[i])
             self.dut.io_sram_we.value = 1
             await ClockCycles(self.dut.clk, 1)
@@ -160,22 +176,21 @@ class WbMaster(object):
             raise TestError("burst cycle: data list has less than 2 elements")
 
         wrap_mask = wrap_bitmask(bte)
-
-        adr_base = (adr//adr_shift) & (~wrap_mask)
-        cnt_offset = (adr//adr_shift) & wrap_mask
+        adrs = inc_adr_gen(adr//adr_shift, len(data), wrap_mask)
 
         ops = []
         for i in range(len(data)):
-            # lsb = counter + offset, overflow ignored
-            offset_lsb = (i+cnt_offset) & wrap_mask
-            # msb = counter value without wrapped bytes
-            offset_msb = i & (~wrap_mask)
-            offset = offset_msb + offset_lsb
-            ops.append(WBOp(adr_base + offset, data[offset], idle=idle, acktimeout=acktimeout, cti=0b010, bte=bte))
+            ops.append(WBOp(adrs[i], data[i], idle=idle, acktimeout=acktimeout, cti=0b010, bte=bte))
         ops[-1].cti = 0b111 # last request ends with End-of-Burst to inform slave that it can terminate current data phase
         if isinstance(end, tuple):
             ops.append(WBOp(end[0] // adr_shift, end[1], idle=idle, acktimeout=acktimeout, cti=0b111, bte=bte))
 
+        for op in ops:
+            dump(op)
+
         responses = await self.wbs.send_cycle(ops)
+
+        for res in responses:
+            dump(res)
 
         return responses
