@@ -10,7 +10,8 @@ Tests are written in Python, using Cocotb simulation library and cocotbext-wishb
 ```
 $ cd test
 $ pip install -r requirements.txt
-$ COCOTB_LOG_LEVEL=debug make
+$ make
+$ make test
 ```
 
 ## Test SoC
