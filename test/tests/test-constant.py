@@ -73,7 +73,7 @@ async def test_write(dut):
 
     # verify tx fifo output
     for i in range(len(responses)):
-        print("[{}] written from wb: {}, received from fifo: {}".format(i, bin(bus_write[i]), fifo_rec[i]))
+        harness.dut._log.info("[{}] written from wb: {}, received from fifo: {}".format(i, bin(bus_write[i]), fifo_rec[i]))
         assert fifo_rec[i] == bus_write[i]
 
     clk_gen.kill()

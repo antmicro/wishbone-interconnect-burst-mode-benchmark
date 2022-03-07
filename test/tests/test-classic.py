@@ -55,7 +55,7 @@ async def test_read(dut):
 
     # verify
     for i in range(len(responses)):
-        harness.dut._log.debug("{} @ {:08x} ? {}".format(hex(responses[i].datrd), responses[i].adr, bin(test_data[i])))
+        harness.dut._log.info("{} @ {:08x} ? {}".format(hex(responses[i].datrd), responses[i].adr, bin(test_data[i])))
         assert responses[i].datrd == test_data[i]
 
 
@@ -74,7 +74,6 @@ async def test_write(dut):
     ops_write = []
     for i in range(length):
         t = (adr_base+adr_offset+(i*adr_inc), test_data[i])
-        print("op: {:08x} @ {:08x}".format(t[1], t[0]))
         ops_write.append(t)
 
     # setup
@@ -98,7 +97,7 @@ async def test_write(dut):
         if fifo_fill:
             assert fifo_rec[i] == ops_write[i][1]
         if sram_fill:
-            harness.dut._log.debug("{:08x} @ {:08x} ? {}".format(responses[i].datwr, responses[i].adr, sram_after[i]))
+            harness.dut._log.info("{:08x} @ {:08x} ? {}".format(responses[i].datwr, responses[i].adr, sram_after[i]))
             assert sram_after[i] == responses[i].datwr
 
 
