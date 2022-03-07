@@ -79,6 +79,11 @@ class WbMaster(object):
     async def wb_classic_cycle(self, requests, idle=0, acktimeout=1):
         adr_shift = self.wbs._width//8
 
+        if not isinstance(requests, list):
+            raise TestError("classic cycle: requests is not a list")
+        if len(requests) < 1:
+            raise TestError("classic cycle: no elements on requests list")
+
         ops = []
         for req in requests:
             ops.append(WBOp(req[0] // adr_shift, req[1], idle=idle, acktimeout=acktimeout))
@@ -93,8 +98,8 @@ class WbMaster(object):
 
         if not isinstance(data, list):
             raise TestError("burst cycle: data is not a list")
-        if len(data) < 2:
-            raise TestError("burst cycle: data list has less than 2 elements")
+        if len(data) < 1:
+            raise TestError("burst cycle: no elements on data list")
 
         ops = []
         for word in data:
@@ -109,6 +114,11 @@ class WbMaster(object):
 
     @cocotb.coroutine
     async def fifo_write(self, data):
+        if not isinstance(data, list):
+            raise TestError("FIFO RX write: data is not a list")
+        if len(data) < 1:
+            raise TestError("FIFO RX write: data is empty")
+
         for word in data:
             # TODO: stall or throw when FIFO is full
             self.dut.io_fifo_dat_rx.value = word
@@ -121,6 +131,9 @@ class WbMaster(object):
 
     @cocotb.coroutine
     async def fifo_read(self, length):
+        if length < 1:
+            raise TestError("FIFO TX read: length == 0")
+
         stream = []
         for i in range(length):
             # TODO: stall or throw when FIFO is empty
@@ -135,6 +148,9 @@ class WbMaster(object):
 
     @cocotb.coroutine
     async def sram_read(self, addr, length, mask=0):
+        if length < 1:
+            raise TestError("SRAM ext. read: lenght == 0")
+
         adr_shift = self.wbs._width//8
         adrs = inc_adr_gen(addr//adr_shift, length, mask)
 
@@ -151,6 +167,11 @@ class WbMaster(object):
 
     @cocotb.coroutine
     async def sram_write(self, addr, data, mask=0):
+        if not isinstance(data, list):
+            raise TestError("SRAM ext. write: data is not a list")
+        if len(data) < 1:
+            raise TestError("SRAM ext. write: data list doesn't have any elements")
+
         adr_shift = self.wbs._width // 8
         adrs = inc_adr_gen(addr//adr_shift, len(data), mask)
 
@@ -169,8 +190,8 @@ class WbMaster(object):
 
         if not isinstance(data, list):
             raise TestError("burst cycle: data is not a list")
-        if len(data) < 2:
-            raise TestError("burst cycle: data list has less than 2 elements")
+        if len(data) < 1:
+            raise TestError("burst cycle: data list doesn't have any elements")
 
         wrap_mask = wrap_bitmask(bte)
         adrs = inc_adr_gen(adr//adr_shift, len(data), wrap_mask)

@@ -42,7 +42,7 @@ def test_compile():
     )
 
 @pytest.mark.parametrize("offset", range(0, 16, 4))
-@pytest.mark.parametrize("length", [2, 4, 8, 16])
+@pytest.mark.parametrize("length", [1, 2, 4, 8, 16])
 def test_sram_classic(offset, length):
     reg = mem_regs["sram"]
     extra_env = {
@@ -61,7 +61,7 @@ def test_sram_classic(offset, length):
     )
 
 @pytest.mark.parametrize("offset", range(0, 16, 4))
-@pytest.mark.parametrize("length", [2, 4, 8, 16])
+@pytest.mark.parametrize("length", [1, 2, 4, 8, 16])
 @pytest.mark.parametrize("bte", range(4))
 def test_sram_incrementing(offset, length, bte):
     reg = mem_regs["sram"]
@@ -81,7 +81,7 @@ def test_sram_incrementing(offset, length, bte):
         waves=True,
     )
 
-@pytest.mark.parametrize("length", range(2,9))
+@pytest.mark.parametrize("length", range(1,9))
 def test_fifo_classic(length):
     reg = mem_regs["fifo"]
     extra_env = {
@@ -97,7 +97,7 @@ def test_fifo_classic(length):
         waves=True,
     )
 
-@pytest.mark.parametrize("length", range(2,9))
+@pytest.mark.parametrize("length", range(1,9))
 def test_fifo_constant(length):
     reg = mem_regs["fifo"]
     extra_env = {
