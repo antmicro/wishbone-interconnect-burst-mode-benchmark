@@ -46,6 +46,8 @@ async def test_read(dut):
     await harness.sram_write(adr_offset, prefill, wrap_bitmask(bte))
     responses = await harness.wb_inc_adr_burst_cycle(adr_base + adr_offset, bus_read, acktimeout=3, bte=bte)
 
+    harness.count_cycles(responses)
+
     # verify if bus reads match initial RAM contents
     for i in range(len(prefill)):
         assert responses[i].datrd == prefill[i]
@@ -72,6 +74,8 @@ async def test_write(dut):
     responses = await harness.wb_inc_adr_burst_cycle(adr_base + adr_offset, bus_write, acktimeout=3, bte=bte)
     sram_read = await harness.sram_read(adr_offset, len(bus_write), wrap_bitmask(bte))
 
+    harness.count_cycles(responses)
+
     # verify if RAM contents match bus writes
     for i in range(len(bus_write)):
         assert responses[i].datwr == sram_read[i]
@@ -79,7 +83,7 @@ async def test_write(dut):
     clk_gen.kill()
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def test_read_with_write_tail(dut):
     # parameters
     adr_base = int(os.environ.get("adr_base", "268435456")) # base peripheral address (byte addressed, look at csr.csv)
@@ -103,6 +107,8 @@ async def test_read_with_write_tail(dut):
     await harness.sram_write(adr_offset, prefill, wrap_bitmask(bte))
     responses = await harness.wb_inc_adr_burst_cycle(adr_base + adr_offset, bus_read, acktimeout=3, bte=bte, end=tail)
     sram_post = await harness.sram_read(tail[0] - adr_base, 1)
+
+    harness.count_cycles(responses)
 
     # get burst operations results sorted by address
     responses_sorted = sorted(responses[:-1], key=lambda a: (a.adr))
@@ -137,6 +143,8 @@ async def test_write_with_read_tail(dut):
     await harness.reset()
     responses = await harness.wb_inc_adr_burst_cycle(adr_base + adr_offset, bus_write, acktimeout=3, bte=bte, end=tail)
     sram_read = await harness.sram_read(adr_offset, len(bus_write), wrap_bitmask(bte))
+
+    harness.count_cycles(responses)
 
     # verify if RAM contents match bus writes
     for i in range(len(bus_write)):

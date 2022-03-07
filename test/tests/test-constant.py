@@ -41,9 +41,11 @@ async def test_read(dut):
     await harness.fifo_write(fifo_fill)
     responses = await harness.wb_const_adr_burst_cycle(adr_base+adr_offset, bus_read, acktimeout=3)
 
+    harness.count_cycles(responses)
+
     # verify bus responses from rx fifo
     for i in range(len(responses)):
-        assert responses[i][1] == fifo_fill[i]
+        assert responses[i].datrd == fifo_fill[i]
 
     clk_gen.kill()
 
@@ -67,6 +69,8 @@ async def test_write(dut):
     responses = await harness.wb_const_adr_burst_cycle(adr_base+adr_offset, bus_write, acktimeout=3)
     fifo_rec = await harness.fifo_read(len(bus_write))
 
+    harness.count_cycles(responses)
+
     # verify tx fifo output
     for i in range(len(responses)):
         print("[{}] written from wb: {}, received from fifo: {}".format(i, bin(bus_write[i]), fifo_rec[i]))
@@ -75,7 +79,7 @@ async def test_write(dut):
     clk_gen.kill()
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def test_read_with_write_tail(dut):
     # parameters
     adr_base = int(os.environ.get("adr_base", "3489660928")) # base peripheral address (byte addressed, look at csr.csv)
@@ -98,9 +102,11 @@ async def test_read_with_write_tail(dut):
     responses = await harness.wb_const_adr_burst_cycle(adr_base+adr_offset, bus_read, acktimeout=3, end=tail)
     fifo_rec = await harness.fifo_read(1)
 
+    harness.count_cycles(responses)
+
     # verify bus responses from rx fifo
     for i in range(len(fifo_fill)):
-        assert responses[i][1] == fifo_fill[i]
+        assert responses[i].datrd == fifo_fill[i]
     # verify tx fifo output
     assert fifo_rec[0] == tail[1]
 
@@ -132,10 +138,12 @@ async def test_write_with_read_tail(dut):
     responses = await harness.wb_const_adr_burst_cycle(adr_base+adr_offset, bus_write, acktimeout=3, end=tail)
     fifo_rec = await harness.fifo_read(len(bus_write))
 
+    harness.count_cycles(responses)
+
     # verify tx fifo output
     for i in range(len(bus_write)):
         assert fifo_rec[i] == bus_write[i]
     # verify last bus response from rx fifo
-    assert responses[-1][1] == fifo_fill[0]
+    assert responses[-1].datrd == fifo_fill[0]
 
     clk_gen.kill()

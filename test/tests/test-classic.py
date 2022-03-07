@@ -51,9 +51,11 @@ async def test_read(dut):
 
     clk_gen.kill()
 
+    harness.count_cycles(responses)
+
     # verify
     for i in range(len(responses)):
-        print("{} @ {:08x} ? {}".format(hex(responses[i].datrd), responses[i].adr, bin(test_data[i])))
+        harness.dut._log.debug("{} @ {:08x} ? {}".format(hex(responses[i].datrd), responses[i].adr, bin(test_data[i])))
         assert responses[i].datrd == test_data[i]
 
 
@@ -89,12 +91,14 @@ async def test_write(dut):
 
     clk_gen.kill()
 
+    harness.count_cycles(responses)
+
     # verify
     for i in range(len(responses)):
         if fifo_fill:
             assert fifo_rec[i] == ops_write[i][1]
         if sram_fill:
-            print("{:08x} @ {:08x} ? {}".format(responses[i].datwr, responses[i].adr, sram_after[i]))
+            harness.dut._log.debug("{:08x} @ {:08x} ? {}".format(responses[i].datwr, responses[i].adr, sram_after[i]))
             assert sram_after[i] == responses[i].datwr
 
 
@@ -112,11 +116,10 @@ async def test_readwrite(dut):
     await harness.wb_classic_cycle(ops_write, acktimeout=3)
     responses_after = await harness.wb_classic_cycle(ops_read, acktimeout=3)
 
+    harness.count_cycles(responses_before)
+    harness.count_cycles(responses_after)
+
     assert responses_after == ops_write
     assert responses_after != responses_before
 
     clk_gen.kill()
-
-#@cocotb.test()
-#async def test_readmodifywrite(dut):
-#    # TODO: add an empty operation to cocotbext-wishbone (negate STB for n cycles)

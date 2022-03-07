@@ -105,10 +105,7 @@ class WbMaster(object):
 
         responses = await self.wbs.send_cycle(ops)
 
-        result = []
-        for res in responses:
-            result.append((res.adr * adr_shift, res.datrd))
-        return result
+        return responses
 
     @cocotb.coroutine
     async def fifo_write(self, data):
@@ -120,7 +117,7 @@ class WbMaster(object):
             self.dut.io_fifo_stb_rx.value = 0
             await ClockCycles(self.dut.clk, 1)
             self.dut.io_fifo_dat_rx.value = 0
-            self.dut._log.info("fifo write: {}".format( self.dut.io_fifo_dat_rx.value ))
+            self.dut._log.debug("fifo write: {}".format( self.dut.io_fifo_dat_rx.value ))
 
     @cocotb.coroutine
     async def fifo_read(self, length):
@@ -132,7 +129,7 @@ class WbMaster(object):
             await ClockCycles(self.dut.clk, 1)
             self.dut.io_fifo_stb_tx.value = 0
             await ClockCycles(self.dut.clk, 1)
-            self.dut._log.info("fifo read: {}".format( self.dut.io_fifo_dat_tx.value ))
+            self.dut._log.debug("fifo read: {}".format( self.dut.io_fifo_dat_tx.value ))
         
         return stream
 
@@ -148,7 +145,7 @@ class WbMaster(object):
             await ClockCycles(self.dut.clk, 2)
             words.append(self.dut.io_sram_datrd.value)
             await ClockCycles(self.dut.clk, 2)
-            self.dut._log.info("sram read: {:08x} @ {:08x}".format( int(self.dut.io_sram_datrd.value), self.dut.io_sram_adr.value * adr_shift ))
+            self.dut._log.debug("sram read: {:08x} @ {:08x}".format( int(self.dut.io_sram_datrd.value), self.dut.io_sram_adr.value * adr_shift ))
 
         return words
 
@@ -164,7 +161,7 @@ class WbMaster(object):
             await ClockCycles(self.dut.clk, 1)
             self.dut.io_sram_we.value = 0
             await ClockCycles(self.dut.clk, 1)
-            self.dut._log.info("sram write: {:08x} @ {:08x}".format( int(self.dut.io_sram_datwr.value), self.dut.io_sram_adr.value * adr_shift ))
+            self.dut._log.debug("sram write: {:08x} @ {:08x}".format( int(self.dut.io_sram_datwr.value), self.dut.io_sram_adr.value * adr_shift ))
 
     @cocotb.coroutine
     async def wb_inc_adr_burst_cycle(self, adr, data, idle=0, acktimeout=1, bte=0b00, end=None):
@@ -185,12 +182,13 @@ class WbMaster(object):
         if isinstance(end, tuple):
             ops.append(WBOp(end[0] // adr_shift, end[1], idle=idle, acktimeout=acktimeout, cti=0b111, bte=bte))
 
-        for op in ops:
-            dump(op)
-
         responses = await self.wbs.send_cycle(ops)
 
-        for res in responses:
-            dump(res)
-
         return responses
+
+    def count_cycles(self, responses):
+        # count cycles used for request
+        cycle_len = 0
+        for res in responses:
+            cycle_len = cycle_len + res.waitAck + 2
+        self.dut._log.info("{} clock cycles spent on Wishbone cycle".format(cycle_len))
