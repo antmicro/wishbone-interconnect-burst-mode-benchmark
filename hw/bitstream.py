@@ -69,7 +69,8 @@ def main():
     parser.set_defaults(csr_csv="csr.csv")
     args = parser.parse_args()
 
-    soc_kwargs = soc_core_argdict(args)
+    soc_kwargs = {}
+    soc_kwargs["l2_size"] = 0
     soc_kwargs["with_uart"] = True
     soc_kwargs["with_timer"] = True
     soc_kwargs["with_ctrl"] = True
@@ -95,18 +96,18 @@ def main():
     ## Build final SoC
     builder = Builder(soc, **builder_argdict(args))
     builder_kwargs = {}
+    if sim_config is not None:
+        builder_kwargs["sim_config"] = sim_config
+        builder_kwargs["threads"] = args.threads
+        builder_kwargs["opt_level"] = args.opt_level
+        builder_kwargs["interactive"] = True
     if soc.toolchain == "vivado":
         builder_kwargs = vivado_build_argdict(args)
 
     if not args.no_compile_software:
         builder.add_software_package("application", os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "sw")))
 
-    builder.build(**builder_kwargs,
-                  run        = args.build,
-                  sim_config = sim_config,
-                  threads    = args.threads,
-                  opt_level  = args.opt_level,
-                  interactive = True)
+    builder.build(**builder_kwargs, run = args.build)
 
 if __name__ == "__main__":
     main()
