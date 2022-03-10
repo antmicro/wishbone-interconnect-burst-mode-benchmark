@@ -13,7 +13,7 @@ class SimSoC(TestSoC):
     toolchain = "verilator"
     local_ip = ""
     remote_ip = ""
-    
+
     def __init__(self, local_ip, remote_ip, **kwargs):
         platform = litex_sim.Platform()
         sys_clk_freq = int(1e6)
@@ -26,7 +26,10 @@ class SimSoC(TestSoC):
         # Ethernet / Etherbone
         self.submodules.ethphy = LiteEthPHYModel(self.platform.request("eth", 0))
         self.add_etherbone(phy=self.ethphy, ip_address=self.local_ip)
-    
+
+        # Simulation debug
+        platform.add_debug(self, reset=0)
+
     def get_sim_config(self):
         sim_config = SimConfig()
         sim_config.add_clocker("sys_clk", freq_hz=self.sys_clk_freq)

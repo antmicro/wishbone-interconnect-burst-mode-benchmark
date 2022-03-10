@@ -52,5 +52,11 @@ int main(void)
     memspeed((unsigned int *)TEST_ADDR, TEST_SIZE, 0, 1);
     puts(":D");
 
+#ifdef CSR_SIM_FINISH_BASE
+    /* Finish simulation */
+    sim_trace_enable_write(0);
+    sim_finish_finish_write(1);
+#endif
+
     return 0;
 }
