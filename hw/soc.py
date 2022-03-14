@@ -7,8 +7,6 @@ from litex.soc.integration.soc import SoCRegion
 from litex.soc.integration.soc_core import *
 from litex.soc.integration.builder import *
 
-from litedram.modules import MT41K128M16
-from litedram.phy import s7ddrphy
 from litescope import LiteScopeAnalyzer
 
 from litex.tools.litex_sim import *

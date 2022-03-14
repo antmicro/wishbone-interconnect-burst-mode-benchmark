@@ -1,12 +1,49 @@
 # -*- coding: utf-8 -*-
 
+from migen import *
 from soc import TestSoC
 
+from litex.build.generic_platform import *
 from litex.build.io import CRG
-from litex.tools import litex_sim
+from litex.build.sim import *
 from litex.build.sim.config import SimConfig
 from litex.soc.cores.cpu import CPUS
 from liteeth.phy.model import LiteEthPHYModel
+
+
+# IOs ----------------------------------------------------------------------------------------------
+
+_io = [
+    # Clk / Rst.
+    ("sys_clk", 0, Pins(1)),
+    ("sys_rst", 0, Pins(1)),
+
+    # Serial.
+    ("serial", 0,
+        Subsignal("source_valid", Pins(1)),
+        Subsignal("source_ready", Pins(1)),
+        Subsignal("source_data",  Pins(8)),
+
+        Subsignal("sink_valid",   Pins(1)),
+        Subsignal("sink_ready",   Pins(1)),
+        Subsignal("sink_data",    Pins(8)),
+    ),
+
+    # Ethernet (Stream Endpoint).
+    ("eth_clocks", 0,
+        Subsignal("tx", Pins(1)),
+        Subsignal("rx", Pins(1)),
+    ),
+    ("eth", 0,
+        Subsignal("source_valid", Pins(1)),
+        Subsignal("source_ready", Pins(1)),
+        Subsignal("source_data",  Pins(8)),
+
+        Subsignal("sink_valid",   Pins(1)),
+        Subsignal("sink_ready",   Pins(1)),
+        Subsignal("sink_data",    Pins(8)),
+    ),
+]
 
 
 class SimSoC(TestSoC):
@@ -15,7 +52,7 @@ class SimSoC(TestSoC):
     remote_ip = ""
 
     def __init__(self, local_ip, remote_ip, **kwargs):
-        platform = litex_sim.Platform()
+        platform = SimPlatform("SIM", _io)
         sys_clk_freq = int(1e6)
         crg = CRG(platform.request("sys_clk"))
         self.local_ip = local_ip
