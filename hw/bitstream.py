@@ -101,6 +101,8 @@ def main():
         builder_kwargs["threads"] = args.threads
         builder_kwargs["opt_level"] = args.opt_level
         builder_kwargs["interactive"] = True
+        builder_kwargs["trace"] = False
+        builder_kwargs["trace_fst"] = False
     if soc.toolchain == "vivado":
         builder_kwargs = vivado_build_argdict(args)
 
