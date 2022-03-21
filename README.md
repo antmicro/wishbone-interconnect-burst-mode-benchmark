@@ -24,10 +24,12 @@ Assuming you already have installed YosysHQ OSS CAD Suite, LiteX and RISC-V GCC 
 ```
 # apt install verilator gtkwave libevent-dev libjson-c-dev
 $ cd hw
+$ ./bitstream.py --target=SimSoC
 $ ./bitstream.py --target=SimSoC --build
 ```
 and if you have Vivado installed:
 ```
+$ ./bitstream.py --target=ArtySoC
 $ ./bitstream.py --target=ArtySoC --build
 ```
 

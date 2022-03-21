@@ -22,7 +22,6 @@ class TestSoC(SoCCore):
             cpu_variant              = "full",
             ident                    = "Interconnect Benchmark SoC",
             ident_version            = True,
-            integrated_main_ram_size = 0x2000,
             integrated_rom_size      = 0x6000,
             **kwargs)
 

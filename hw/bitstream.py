@@ -104,10 +104,19 @@ def main():
     if soc.toolchain == "vivado":
         builder_kwargs = vivado_build_argdict(args)
 
-    if not args.no_compile_software:
-        builder.add_software_package("application", os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "sw")))
+    # Add application and include as secondary ROM
+    soc.mem_map["app_rom"] = 0x10000
+    app_rom_path = os.path.join(builder.software_dir, "application", "application.bin")
+    app_rom_size = 0x2000
+    app_rom = []
+    builder.add_software_package("application", os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "sw")))
+    if os.path.exists(app_rom_path):
+        app_rom = get_mem_data(app_rom_path, "little")
+    soc.add_rom("app_rom", soc.mem_map["app_rom"], app_rom_size, contents=app_rom)
+    soc.add_constant("ROM_BOOT_ADDRESS", soc.mem_map["app_rom"])
 
-    builder.build(**builder_kwargs, run = args.build)
+    # Build everything
+    builder.build(**builder_kwargs, run=args.build)
 
 if __name__ == "__main__":
     main()
