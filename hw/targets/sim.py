@@ -33,9 +33,6 @@ class SimSoC(TestSoC):
         cpu = CPUS.get(self.cpu_type)
 
         # UART
-        sim_config.add_module("serial2tcp", "serial", args={"port" : 1111})
-
-        # Ethernet
-        sim_config.add_module("ethernet", "eth", args={"interface": "tap0", "ip": self.remote_ip})
+        sim_config.add_module("serial2console", "serial")
 
         return sim_config
