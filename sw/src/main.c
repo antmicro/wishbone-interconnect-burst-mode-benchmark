@@ -11,27 +11,7 @@
 #define TEST_ADDR TEST_RAM_BASE
 #define TEST_SIZE TEST_RAM_SIZE
 
-uint64_t system_ticks = 0;
-
-void isr(void);
 int main(void);
-
-
-void isr(void)
-{
-    unsigned int irqs;
-
-    irqs = irq_pending() & irq_getmask();
-
-    if (irqs & (1 << UART_INTERRUPT)) {
-        uart_isr();
-    }
-
-    if (irqs & (1 << TIMER0_INTERRUPT)) {
-        system_ticks++;
-        timer0_ev_pending_write(1);
-    }
-}
 
 int main(void)
 {
