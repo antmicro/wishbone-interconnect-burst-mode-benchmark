@@ -1,5 +1,5 @@
 cocotb
-cocotb-test
+cocotb-test==0.2.1
 pytest-html
 pytest-xdist
 #git+https://github.com/wallento/cocotbext-wishbone.git

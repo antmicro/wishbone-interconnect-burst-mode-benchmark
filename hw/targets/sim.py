@@ -5,7 +5,7 @@ from soc import TestSoC
 
 from litex.build.generic_platform import *
 from litex.build.io import CRG
-from litex.build.sim import *
+from litex.build.sim import SimPlatform
 from litex.build.sim.config import SimConfig
 from litex.soc.cores.cpu import CPUS
 from liteeth.phy.model import LiteEthPHYModel

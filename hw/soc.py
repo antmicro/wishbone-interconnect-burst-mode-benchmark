@@ -9,7 +9,6 @@ from litex.soc.integration.builder import *
 
 from litescope import LiteScopeAnalyzer
 
-from litex.tools.litex_sim import *
 
 class TestSoC(SoCCore):
     def __init__(self, platform, sys_clk_freq, crg, **kwargs):
