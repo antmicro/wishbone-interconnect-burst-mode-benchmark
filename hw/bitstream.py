@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2021 Antmicro
+# Copyright (C) 2022 Antmicro
 #
 # http://www.apache.org/licenses/LICENSE-2.0
 #
