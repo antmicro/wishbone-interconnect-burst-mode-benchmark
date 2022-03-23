@@ -13,10 +13,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-LX_DEPENDENCIES = ["riscv", "icestorm", "yosys", "nextpnr-ice40"]
-
-# Import lxbuildenv to integrate the deps/ directory
-import lxbuildenv
 
 import os, os.path, sys
 import argparse
@@ -33,8 +29,6 @@ from litex.soc.integration.common import *
 
 from targets.sim import SimSoC
 from targets.arty import ArtySoC
-
-kB = 1024
 
 
 def main():
@@ -56,6 +50,7 @@ def main():
     parser.add_argument("--bus-address-width", default=32,         type=auto_int, help="Bus address-width (default=32).")
     parser.add_argument("--bus-timeout",       default=1e6,        type=float,    help="Bus timeout in cycles (default=1e6).")
     # Simulation parameters
+    parser.add_argument("--trace",             default=False,           help="Enable tracing")
     parser.add_argument("--threads",           default=1,               help="Set number of threads (default=1)")
     parser.add_argument("--opt-level",         default="O3",            help="Compilation optimization level")
     parser.add_argument("--sim-debug",         action="store_true",     help="Add simulation debugging modules")
@@ -100,9 +95,9 @@ def main():
         builder_kwargs["sim_config"] = sim_config
         builder_kwargs["threads"] = args.threads
         builder_kwargs["opt_level"] = args.opt_level
-        builder_kwargs["interactive"] = True
-        builder_kwargs["trace"] = False
-        builder_kwargs["trace_fst"] = False
+        builder_kwargs["interactive"] = False
+        builder_kwargs["trace"] = args.trace
+        builder_kwargs["trace_fst"] = args.trace
     if soc.toolchain == "vivado":
         builder_kwargs = vivado_build_argdict(args)
 
