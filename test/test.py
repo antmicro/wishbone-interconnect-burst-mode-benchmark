@@ -27,6 +27,7 @@ def get_csr_constants(data):
             output[i[1]] = i[2]
     return output
 
+no_waves = int(os.environ.get("NO_WAVES", "0"))
 csr = read_csr("csr.csv")
 mem_regs = get_csr_memory_regions(csr)
 consts = get_csr_constants(csr)
@@ -57,7 +58,7 @@ def test_sram_classic(offset, length):
         toplevel="tb",
         module="tests.test-classic",
         extra_env=extra_env,
-        waves=True,
+        waves=not no_waves,
     )
 
 @pytest.mark.parametrize("offset", range(0, 16, 4))
@@ -78,7 +79,7 @@ def test_sram_incrementing(offset, length, bte):
         toplevel="tb",
         module="tests.test-incrementing",
         extra_env=extra_env,
-        waves=True,
+        waves=not no_waves,
     )
 
 @pytest.mark.parametrize("length", range(1,9))
@@ -94,7 +95,7 @@ def test_fifo_classic(length):
         toplevel="tb",
         module="tests.test-classic",
         extra_env=extra_env,
-        waves=True,
+        waves=not no_waves,
     )
 
 @pytest.mark.parametrize("length", range(1,9))
@@ -110,5 +111,5 @@ def test_fifo_constant(length):
         toplevel="tb",
         module="tests.test-constant",
         extra_env=extra_env,
-        waves=True,
+        waves=not no_waves,
     )
