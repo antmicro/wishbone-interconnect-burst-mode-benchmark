@@ -1,4 +1,4 @@
-# Burst Mode Interconnect Benchmark
+# Wishbone Interconnect Burst Mode Benchmark
 
 Copyright (c) 2022 Antmicro
 
@@ -66,3 +66,44 @@ $ litex_server --udp --udp-ip 169.254.10.10
 $ litex_term socket://localhost:1111
 $ litescope_cli -v simsoc_dbus_dbus_adr 0x10001ef0
 ```
+
+### Benchmark results
+
+#### Simulated SoC (Verilator, 1 MHz simulated clock):
+
+64 KiB sequential:
+
+|       | w/o bursts  | w/ bursts | difference (% of speed w/o bursts) |
+|-------|-------------|-----------|------------------------------------|
+| write |   1.6 MiB/s | 1.6 MiB/s | 100.0 %                            |
+|  read | 918.3 KiB/s | 1.1 MiB/s | 123.6 %                            |
+
+
+64 KiB random:
+
+|       | w/o bursts  | w/ bursts   | difference (% of speed w/o bursts) |
+|-------|-------------|-------------|------------------------------------|
+| write |   1.6 MiB/s |   1.6 MiB/s | 100.0 %                            |
+|  read | 122.7 KiB/s | 154.8 KiB/s | 126.2 %                            |
+
+
+#### SoC on FPGA (Arty A7-35T, 100 MHz clock):
+
+64 KiB sequential:
+
+|       | w/o bursts  | w/ bursts   | difference (% of speed w/o bursts) |
+|-------|-------------|-------------|------------------------------------|
+| write | 166.6 MiB/s | 166.6 MiB/s | 100.0 %                            |
+|  read |  87.2 MiB/s | 110.4 MiB/s | 126.6 %                            |
+
+
+64 KiB random:
+
+|       | w/o bursts  | w/ bursts   | difference (% of speed w/o bursts) |
+|-------|-------------|-------------|------------------------------------|
+| write | 166.6 MiB/s | 166.7 MiB/s | 100.0 %                            |
+|  read |  11.6 MiB/s |  14.7 MiB/s | 126.7 %                            |
+
+VexRiscv core used in this SoC uses write-through L1 instructions and data cache.
+Write speed hasn't changed, because it is limited by a speed of slower memory, 
+L1 cache in this case.
