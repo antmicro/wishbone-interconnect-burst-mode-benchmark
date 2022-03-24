@@ -39,6 +39,7 @@ def main():
         description="Interconnect Benchmark - gateware/BIOS/firmware builder"
     )
     # Basic parameters
+    parser.add_argument("--burst", action="store_true", help="Enable burst support in SRAM and ROM")
     parser.add_argument("--build", action="store_true", help="Build bitstream")
     parser.add_argument(
         "--target", default="SimSoC",
@@ -77,7 +78,10 @@ def main():
         target = targets[args.target]
 
     ## Create SoC
-    soc = target(local_ip=args.local_ip, remote_ip=args.remote_ip, **soc_kwargs)
+    soc = target(local_ip=args.local_ip, remote_ip=args.remote_ip,
+                 integrated_rom_burst=args.burst, integrated_sram_burst=args.burst,
+                 **soc_kwargs
+                 )
 
     # Add software constants
     for i in range(4):

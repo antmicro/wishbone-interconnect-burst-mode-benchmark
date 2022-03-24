@@ -38,7 +38,7 @@ class TestSoC(SoCCore):
         self.submodules.crg = crg
 
         # Additional RAM
-        self.add_ram("test_ram", 0x20000000, 0x10000)
+        self.add_ram("test_ram", 0x20000000, 0x10000, burst=kwargs["integrated_sram_burst"])
 
         # LiteScope
         # TODO: What signals could be also monitored?
