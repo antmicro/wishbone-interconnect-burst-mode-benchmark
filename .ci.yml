@@ -1,0 +1,24 @@
+image: hdlc/sim
+
+variables:
+  PNR_SEED: 1
+  TOOLCHAIN_VERSION: v1.5.6
+  GIT_SUBMODULE_STRATEGY: recursive
+
+before_script:
+  - ./scripts/prepare.sh
+
+test:
+  stage: build
+  script:
+   - ./scripts/run-tests.sh
+  artifacts:
+    paths: ["test/pytest_report.html", "test/sim_build/*"]
+
+benchmark:
+  stage: build
+  script:
+    - ./scripts/download-riscv-toolchain.sh
+    - ./scripts/find-riscv-toolchain.sh > env
+    - source ./env
+    - ./scripts/run-benchmark.sh

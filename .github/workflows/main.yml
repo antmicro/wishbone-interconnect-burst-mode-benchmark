@@ -1,0 +1,53 @@
+name: 'main'
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    container: hdlc/sim
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        fetch-depth: 3
+
+    - name: Prepare environment
+      run: |
+        ./scripts/prepare.sh
+
+    - name: Build DUT and run tests
+      run: |
+        ./scripts/run-tests.sh
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: |
+          test/pytest_report.html
+          test/sim_build/
+
+  benchmark:
+    container: hdlc/sim
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        fetch-depth: 3
+
+    - name: Prepare environment
+      run: |
+        ./scripts/prepare.sh
+
+    - name: Setup RISC-V GNU toolchain
+      uses: gregdavill/setup-riscv-gnu-toolchain@v1.0
+
+    - name: Build and run benchmark with emulated SoC
+      run: |
+        ./scripts/run-benchmark.sh
