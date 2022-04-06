@@ -119,8 +119,7 @@ class BaseSoC(SoCCore):
         SoCCore.__init__(self, platform, clk_freq,
                          cpu_type=None, integrated_rom_size=0x0,
                          integrated_sram_size=0x100,
-                         integrated_sram_burst=True,
-                         integrated_rom_burst=True,
+                         bus_bursting=True,
                          integrated_main_ram_size=0x0,
                          csr_address_width=14, csr_data_width=32,
                          with_uart=False, with_timer=False

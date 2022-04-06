@@ -39,17 +39,13 @@ def main():
         description="Interconnect Benchmark - gateware/BIOS/firmware builder"
     )
     # Basic parameters
-    parser.add_argument("--burst", action="store_true", help="Enable burst support in SRAM and ROM")
     parser.add_argument("--build", action="store_true", help="Build bitstream")
     parser.add_argument(
         "--target", default="SimSoC",
         help="Target platform: {} (default=\"SimSoC\")".format(", ".join(targets.keys()))
     )
     # Interconnect parameters
-    parser.add_argument("--bus-standard",      default="wishbone",                help="Select bus standard: {}, (default=wishbone).".format(", ".join(SoCBusHandler.supported_standard)))
-    parser.add_argument("--bus-data-width",    default=32,         type=auto_int, help="Bus data-width (default=32).")
-    parser.add_argument("--bus-address-width", default=32,         type=auto_int, help="Bus address-width (default=32).")
-    parser.add_argument("--bus-timeout",       default=1e6,        type=float,    help="Bus timeout in cycles (default=1e6).")
+    parser.add_argument("--bus-bursting",      action="store_true",               help="Enable burst cycles support (only Wishbone is supported).")
     # Simulation parameters
     parser.add_argument("--trace",             default=False,           help="Enable tracing")
     parser.add_argument("--threads",           default=1,               help="Set number of threads (default=1)")
@@ -65,12 +61,6 @@ def main():
     parser.set_defaults(csr_csv="csr.csv")
     args = parser.parse_args()
 
-    soc_kwargs = {}
-    soc_kwargs["l2_size"] = 0
-    soc_kwargs["with_uart"] = True
-    soc_kwargs["with_timer"] = True
-    soc_kwargs["with_ctrl"] = True
-
     if (args.target) not in targets.keys():
         print("Unknown target {}".format(args.target))
         exit(1)
@@ -79,8 +69,8 @@ def main():
 
     ## Create SoC
     soc = target(local_ip=args.local_ip, remote_ip=args.remote_ip,
-                 integrated_rom_burst=args.burst, integrated_sram_burst=args.burst,
-                 **soc_kwargs
+                 bus_bursting=args.bus_bursting, l2_size=0,
+                 with_uart=True, with_timer=True, with_ctrl=True
                  )
 
     # Add software constants

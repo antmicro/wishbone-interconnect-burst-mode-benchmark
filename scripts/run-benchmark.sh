@@ -1,5 +1,5 @@
 #!/bin/sh
 
 cd ./hw
-python3 ./bitstream.py --burst --target=SimSoC
-python3 ./bitstream.py --burst --target=SimSoC --build
+python3 ./bitstream.py --bus-bursting --target=SimSoC
+python3 ./bitstream.py --bus-bursting --target=SimSoC --build
