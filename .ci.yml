@@ -6,6 +6,7 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
 before_script:
+  - ./scripts/prepare-system-deps.sh
   - ./scripts/prepare.sh
 
 test:
