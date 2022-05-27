@@ -18,8 +18,8 @@ $ pip install -r test/requirements.txt
 
 ## Test suite
 
-This test suite is a set of testbenches and scripts used for verifying Wishbone interconnect implementation compatibility with specification.
-The tests are written in Python, using Cocotb simulation library and cocotbext-wishbone extension for testbenches.
+This test suite is a set of testbenches and scripts used for verifying the compatibility of the Wishbone interconnect implementation with the specification.
+The tests are written in Python, using the Cocotb simulation library and the cocotbext-wishbone extension for testbenches.
 Test automation was done with cocotb-test and pytest libraries, with GNU Make used for automating the steps for preparing the Design Under Test (DUT).
 
 ### Usage
@@ -58,8 +58,8 @@ $ ./bitstream.py --target=ArtySoC --build
 
 ### Usage
 
-Connect Arty with a flashed bitstream to your host's Ethernet interface and set its IP address to 169.254.10.1/24.
-Then connect with litex_server, use litex_term to connect to the serial port and litescope_cli to trigger the scope and download results.
+Connect Arty flashed with a bitstream to your host's Ethernet interface and set its IP address to 169.254.10.1/24.
+Then connect with litex_server, use litex_term to connect to the serial port and litescope_cli to trigger the scope and download the results.
 
 ```
 $ litex_server --udp --udp-ip 169.254.10.10
