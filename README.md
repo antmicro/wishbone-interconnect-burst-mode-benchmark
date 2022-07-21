@@ -77,24 +77,26 @@ $ litescope_cli -v simsoc_dbus_dbus_adr 0x10001ef0
 |       | w/o bursts  | w/ bursts | difference (% of speed w/o bursts) |
 |-------|-------------|-----------|------------------------------------|
 | write |   1.6 MiB/s | 1.6 MiB/s | 100.0 %                            |
-|  read | 918.3 KiB/s | 1.1 MiB/s | 123.6 %                            |
+|  read | 917.8 KiB/s | 1.1 MiB/s | 122.7 %                            |
 
 
 64 KiB random:
 
-|       | w/o bursts  | w/ bursts   | difference (% of speed w/o bursts) |
-|-------|-------------|-------------|------------------------------------|
-| write |   1.6 MiB/s |   1.6 MiB/s | 100.0 %                            |
-|  read | 122.7 KiB/s | 154.8 KiB/s | 126.2 %                            |
+|       | w/o bursts | w/ bursts  | difference (% of speed w/o bursts) |
+|-------|------------|------------|------------------------------------|
+| write |  1.6 MiB/s |  1.6 MiB/s | 100.0 %                            |
+|  read | 55.9 KiB/s | 61.7 KiB/s | 110.4 %                            |
 
 
 #### SoC on FPGA (Arty A7-35T, 100 MHz clock):
+
+Results were identical for bitstreams built with Vivado and F4PGA toolchains.
 
 64 KiB sequential:
 
 |       | w/o bursts  | w/ bursts   | difference (% of speed w/o bursts) |
 |-------|-------------|-------------|------------------------------------|
-| write | 166.6 MiB/s | 166.6 MiB/s | 100.0 %                            |
+| write | 166.6 MiB/s | 166.7 MiB/s | 100.1 %                            |
 |  read |  87.2 MiB/s | 110.4 MiB/s | 126.6 %                            |
 
 
@@ -102,7 +104,7 @@ $ litescope_cli -v simsoc_dbus_dbus_adr 0x10001ef0
 
 |       | w/o bursts  | w/ bursts   | difference (% of speed w/o bursts) |
 |-------|-------------|-------------|------------------------------------|
-| write | 166.6 MiB/s | 166.7 MiB/s | 100.0 %                            |
+| write | 166.6 MiB/s | 166.7 MiB/s | 100.1 %                            |
 |  read |  11.6 MiB/s |  14.7 MiB/s | 126.7 %                            |
 
 The VexRiscv core used in this SoC uses write-through L1 instructions and data cache.
