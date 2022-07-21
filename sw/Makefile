@@ -18,7 +18,7 @@ vpath %.a $(PACKAGES:%=../%)
 -include $(OBJECTS:.o=.d)
 
 %.fbi: %.bin
-	$(PYTHON) -m litex.soc.software.mkmscimg $< -f --little -o $@
+	$(PYTHON) -m litex.soc.software.crcfbigen $< -f --little -o $@
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary -S -R .bss $< $@

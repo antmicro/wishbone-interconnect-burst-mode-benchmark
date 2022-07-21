@@ -44,8 +44,9 @@ def main():
         "--target", default="SimSoC",
         help="Target platform: {} (default=\"SimSoC\")".format(", ".join(targets.keys()))
     )
+    parser.add_argument("--toolchain", default=None, help="Override toolchain")
     # Interconnect parameters
-    parser.add_argument("--bus-bursting",      action="store_true",               help="Enable burst cycles support (only Wishbone is supported).")
+    parser.add_argument("--bus-bursting",      action="store_true",     help="Enable burst cycles support (only Wishbone is supported).")
     # Simulation parameters
     parser.add_argument("--trace",             default=False,           help="Enable tracing")
     parser.add_argument("--threads",           default=1,               help="Set number of threads (default=1)")
@@ -58,7 +59,7 @@ def main():
     builder_args(parser)
     vivado_build_args(parser)
 
-    parser.set_defaults(csr_csv="csr.csv")
+    parser.set_defaults(csr_csv="csr.csv", lto=True)
     args = parser.parse_args()
 
     if (args.target) not in targets.keys():
@@ -69,7 +70,7 @@ def main():
 
     ## Create SoC
     soc = target(local_ip=args.local_ip, remote_ip=args.remote_ip,
-                 bus_bursting=args.bus_bursting, l2_size=0,
+                 bus_bursting=args.bus_bursting, l2_size=0, toolchain=args.toolchain,
                  with_uart=True, with_timer=True, with_ctrl=True
                  )
 
@@ -78,6 +79,9 @@ def main():
         soc.add_constant("LOCALIP{}".format(i+1), int(args.local_ip.split(".")[i]))
     for i in range(4):
         soc.add_constant("REMOTEIP{}".format(i+1), int(args.remote_ip.split(".")[i]))
+    soc.add_constant("TERM_MINI")
+    soc.add_constant("TERM_NO_HIST")
+    soc.add_constant("CONFIG_BIOS_NO_PROMPT")
 
     # Get simulation configuration
     sim_config = soc.get_sim_config()

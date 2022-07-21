@@ -1,4 +1,4 @@
 [submodule "hw/deps/litex"]
 	path = hw/deps/litex
-	url = https://github.com/antmicro/litex.git
-	branch = wb-sram-inc-burst
+	url = https://github.com/enjoy-digital/litex.git
+	branch = master

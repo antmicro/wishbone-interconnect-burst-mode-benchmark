@@ -49,9 +49,10 @@ $ cd hw
 $ ./bitstream.py --target=SimSoC
 $ ./bitstream.py --target=SimSoC --build
 ```
-and if you have Vivado installed:
+and if you have F4PGA toolchain installed:
 ```
 $ cd hw
+$ export F4PGA_INSTALL_DIR=/opt/f4pga
 $ ./bitstream.py --target=ArtySoC
 $ ./bitstream.py --target=ArtySoC --build
 ```
