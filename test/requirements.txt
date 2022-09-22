@@ -1,4 +1,4 @@
-cocotb
+cocotb==1.6.2
 cocotb-test==0.2.1
 pytest-html
 pytest-xdist
