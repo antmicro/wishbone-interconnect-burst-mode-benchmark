@@ -6,7 +6,7 @@ all: tb.v dut.v prepare
 
 prepare: tb.v dut.v
 	pytest -m compile test.py
-	cp mem.init sim_build/
+	cp dut_sram.init sim_build/
 
 test: tb.v dut.v
 	pytest -n `nproc` -m 'not compile' --html=pytest_report.html --self-contained-html test.py

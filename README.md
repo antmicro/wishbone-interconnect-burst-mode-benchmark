@@ -49,7 +49,7 @@ $ cd hw
 $ ./bitstream.py --target=SimSoC
 $ ./bitstream.py --target=SimSoC --build
 ```
-and if you have F4PGA toolchain installed:
+and if you have [F4PGA](https://f4pga-examples.readthedocs.io/en/latest/getting.html) toolchain installed:
 ```
 $ cd hw
 $ export F4PGA_INSTALL_DIR=/opt/f4pga
@@ -59,8 +59,8 @@ $ ./bitstream.py --target=ArtySoC --build
 
 ### Usage
 
-Connect Arty flashed with a bitstream to your host's Ethernet interface and set its IP address to 169.254.10.1/24.
-Then connect with litex_server, use litex_term to connect to the serial port and litescope_cli to trigger the scope and download the results.
+Connect Arty flashed with a bitstream to your host's Ethernet interface and set its IP address to `169.254.10.1/24`.
+Then connect with `litex_server`, use `litex_term` to connect to the serial port and `litescope_cli` to trigger the scope and download the results.
 
 ```
 $ litex_server --udp --udp-ip 169.254.10.10
