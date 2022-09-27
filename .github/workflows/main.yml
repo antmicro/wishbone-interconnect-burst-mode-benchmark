@@ -67,3 +67,43 @@ jobs:
     - name: Build and run benchmark with emulated SoC
       run: |
         ./scripts/run-benchmark.sh
+
+  build-arty:
+    runs-on: ubuntu-latest
+    container: gcr.io/hdl-containers/conda/f4pga/xc7/a50t
+
+    env:
+      BASH_ENV: /usr/local/etc/profile.d/conda.sh
+
+    steps:
+    - name: Install Git
+      run: apt-get update -q && apt-get install -q -y git
+
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        fetch-depth: 3
+
+    - name: Install system dependencies
+      run: |
+        ./scripts/prepare-system-deps.sh
+
+    - name: Prepare environment
+      run: |
+        ./scripts/prepare.sh
+
+    - name: Setup RISC-V GNU toolchain
+      uses: gregdavill/setup-riscv-gnu-toolchain@v1.0
+
+    - name: Build benchmark for Arty
+      run: |
+        which python3
+        ./scripts/build-arty.sh
+
+    - name: Upload Arty bitstream
+      uses: actions/upload-artifact@v3
+      with:
+        name: bitstream-arty
+        path: |
+          hw/build/digilent_arty/gateware/digilent_arty.bit

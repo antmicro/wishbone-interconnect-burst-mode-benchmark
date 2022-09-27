@@ -23,3 +23,16 @@ benchmark:
     - ./scripts/find-riscv-toolchain.sh > env
     - source ./env
     - ./scripts/run-benchmark.sh
+
+build-arty:
+  stage: build
+  image: gcr.io/hdl-containers/conda/f4pga/xc7/a50t
+  variables:
+    BASH_ENV: /usr/local/etc/profile.d/conda.sh
+  script:
+    - ./scripts/download-riscv-toolchain.sh
+    - ./scripts/find-riscv-toolchain.sh > env
+    - source ./env
+    - ./scripts/build-arty.sh
+  artifacts:
+    paths: ["hw/build/digilent_arty/gateware/digilent_arty.bit"]
